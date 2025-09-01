@@ -1,13 +1,62 @@
+"use client"
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
-import { User, ArrowLeft, Phone, Mail, Calendar, MapPin } from 'lucide-react'
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
+import { PhoneInput } from '@/components/ui/phone-input'
+import { User, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { z } from 'zod'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+const patientSchema = z.object({
+  firstName: z.string().min(1, 'First name is required'),
+  lastName: z.string().min(1, 'Last name is required'),
+  dateOfBirth: z.string().min(1, 'Date of birth is required'),
+  gender: z.string().min(1, 'Gender is required'),
+  email: z.string().email('Invalid email').optional().or(z.literal('')),
+  phone: z.string().min(6, 'Phone is required'),
+  address: z.string().optional().or(z.literal('')),
+  bloodType: z.string().optional().or(z.literal('')),
+  allergies: z.string().optional().or(z.literal('')),
+  medicalHistory: z.string().optional().or(z.literal('')),
+  emergencyContact: z.string().optional().or(z.literal('')),
+  emergencyPhone: z.string().optional().or(z.literal('')),
+  emergencyRelation: z.string().optional().or(z.literal('')),
+})
+
+type PatientFormValues = z.infer<typeof patientSchema>
 
 export default function MobileNewPatientPage() {
+  const form = useForm<PatientFormValues>({
+    resolver: zodResolver(patientSchema),
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      dateOfBirth: '',
+      gender: '',
+      email: '',
+      phone: '',
+      address: '',
+      bloodType: '',
+      allergies: '',
+      medicalHistory: '',
+      emergencyContact: '',
+      emergencyPhone: '',
+      emergencyRelation: '',
+    },
+  })
+
+  const onSubmit = (data: PatientFormValues) => {
+    // TODO: handle submit
+    console.log('Patient form submit', data)
+  }
+
   return (
     <div className="space-y-4 pb-20">
       {/* Page header */}
@@ -33,116 +82,226 @@ export default function MobileNewPatientPage() {
           <CardDescription>Fill in the patient details</CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-4">
+          <Form {...form}>
+            <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             {/* Personal Information */}
             <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="firstName">First Name</Label>
-                <Input id="firstName" placeholder="John" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="lastName">Last Name</Label>
-                <Input id="lastName" placeholder="Doe" />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
-                <Input type="date" id="dateOfBirth" />
-              </div>
+              <FormField
+                control={form.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="John" className="w-full" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="lastName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Last Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Doe" className="w-full" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="dateOfBirth"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Date of Birth</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
               <div className="space-y-2">
                 <Label htmlFor="gender">Gender</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
-                    <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                  </SelectContent>
-                </Select>
+                <FormField
+                  control={form.control}
+                  name="gender"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select gender" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                            <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
               </div>
             </div>
 
             {/* Contact Information */}
             <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="john.doe@email.com" />
-              </div>
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl>
+                      <Input type="email" placeholder="john.doe@email.com" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="phone">Phone Number</Label>
-                <Input id="phone" type="tel" placeholder="+1-555-0000" />
-              </div>
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Phone Number</FormLabel>
+                    <FormControl>
+                      <PhoneInput value={field.value} onChange={field.onChange} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="address">Address</Label>
-                <Textarea 
-                  id="address" 
-                  placeholder="Enter full address..."
-                  rows={2}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Enter full address..." rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Medical Information */}
             <div className="space-y-3">
               <div className="space-y-2">
                 <Label htmlFor="bloodType">Blood Type</Label>
-                <Select>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select blood type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="a-positive">A+</SelectItem>
-                    <SelectItem value="a-negative">A-</SelectItem>
-                    <SelectItem value="b-positive">B+</SelectItem>
-                    <SelectItem value="b-negative">B-</SelectItem>
-                    <SelectItem value="ab-positive">AB+</SelectItem>
-                    <SelectItem value="ab-negative">AB-</SelectItem>
-                    <SelectItem value="o-positive">O+</SelectItem>
-                    <SelectItem value="o-negative">O-</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="allergies">Allergies</Label>
-                <Textarea 
-                  id="allergies" 
-                  placeholder="List any known allergies..."
-                  rows={2}
+                <FormField
+                  control={form.control}
+                  name="bloodType"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select blood type" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="a-positive">A+</SelectItem>
+                            <SelectItem value="a-negative">A-</SelectItem>
+                            <SelectItem value="b-positive">B+</SelectItem>
+                            <SelectItem value="b-negative">B-</SelectItem>
+                            <SelectItem value="ab-positive">AB+</SelectItem>
+                            <SelectItem value="ab-negative">AB-</SelectItem>
+                            <SelectItem value="o-positive">O+</SelectItem>
+                            <SelectItem value="o-negative">O-</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="medicalHistory">Medical History</Label>
-                <Textarea 
-                  id="medicalHistory" 
-                  placeholder="Previous conditions, surgeries, etc..."
-                  rows={3}
-                />
-              </div>
+              <FormField
+                control={form.control}
+                name="allergies"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Allergies</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="List any known allergies..." rows={2} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              
+              <FormField
+                control={form.control}
+                name="medicalHistory"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Medical History</FormLabel>
+                    <FormControl>
+                      <Textarea placeholder="Previous conditions, surgeries, etc..." rows={3} {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Emergency Contact */}
             <div className="space-y-3">
-              <div className="space-y-2">
-                <Label htmlFor="emergencyContact">Emergency Contact Name</Label>
-                <Input id="emergencyContact" placeholder="Emergency contact person" />
-              </div>
+              <FormField
+                control={form.control}
+                name="emergencyContact"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Emergency contact person" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="emergencyPhone">Emergency Contact Phone</Label>
-                <Input id="emergencyPhone" type="tel" placeholder="+1-555-0000" />
-              </div>
+              <FormField
+                control={form.control}
+                name="emergencyPhone"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Emergency Contact Phone</FormLabel>
+                    <FormControl>
+                      <Input type="tel" placeholder="+1-555-0000" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               
-              <div className="space-y-2">
-                <Label htmlFor="emergencyRelation">Relationship</Label>
-                <Input id="emergencyRelation" placeholder="Spouse, parent, etc." />
-              </div>
+              <FormField
+                control={form.control}
+                name="emergencyRelation"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Relationship</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Spouse, parent, etc." {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
             {/* Form actions */}
@@ -156,7 +315,8 @@ export default function MobileNewPatientPage() {
                 </Button>
               </Link>
             </div>
-          </form>
+            </form>
+          </Form>
         </CardContent>
       </Card>
     </div>
