@@ -49,7 +49,6 @@ export default function MobileNotificationsPage() {
             priority: 'medium'
           },
           { 
-            title: 'Lab Results Ready', 
             title: 'Lab Results Ready',
             message: 'Blood test results for Mike Johnson are now available',
             type: 'lab',

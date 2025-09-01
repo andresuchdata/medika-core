@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
@@ -39,6 +39,8 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname()
+  const [touchStart, setTouchStart] = useState<number | null>(null)
+  const [touchEnd, setTouchEnd] = useState<number | null>(null)
 
   // Prevent body scroll when menu is open
   useEffect(() => {
@@ -53,6 +55,31 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
     }
   }, [isOpen])
 
+  // Swipe gesture handling
+  const onTouchStart = (e: React.TouchEvent) => {
+    setTouchStart(e.targetTouches[0].clientX)
+    setTouchEnd(null)
+  }
+
+  const onTouchMove = (e: React.TouchEvent) => {
+    setTouchEnd(e.targetTouches[0].clientX)
+  }
+
+  const onTouchEnd = () => {
+    if (!touchStart || !touchEnd) return
+
+    const distance = touchStart - touchEnd
+    const isLeftSwipe = distance > 80 // Increased threshold for better detection
+
+    if (isLeftSwipe) {
+      onClose()
+    }
+
+    // Reset touch states
+    setTouchStart(null)
+    setTouchEnd(null)
+  }
+
   if (!isOpen) return null
 
   return (
@@ -64,12 +91,12 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
       />
 
       {/* Menu panel */}
-      <div className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl z-[90] lg:hidden">
-        {/* Debug indicator */}
-        <div className="absolute top-0 right-0 bg-red-500 text-white text-xs px-1 py-1 z-[95]">
-          {isOpen ? 'OPEN' : 'CLOSED'}
-        </div>
-
+      <div 
+        className="fixed left-0 top-0 h-full w-80 bg-white shadow-xl z-[90] lg:hidden"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
         {/* Header */}
         <div className="flex h-16 items-center justify-between px-6 border-b border-gray-200">
           <div className="flex items-center space-x-3">
@@ -96,6 +123,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               <Link
                 key={item.name}
                 href={item.href}
+                onClick={onClose} // Auto-close menu on navigation
                 className={cn(
                   'flex items-center px-4 py-3 text-base font-medium rounded-lg transition-colors duration-200',
                   isActive

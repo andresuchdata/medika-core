@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react'
+import React, { createContext, useContext, useReducer, useEffect, useCallback, ReactNode } from 'react'
 
 // UI State Types
 interface UIState {
@@ -114,15 +114,15 @@ export function UIProvider({ children }: UIProviderProps) {
     }
   }, [state])
 
-  // Convenience functions
-  const toggleSidebar = () => dispatch({ type: 'TOGGLE_SIDEBAR' })
-  const setSidebarOpen = (open: boolean) => dispatch({ type: 'SET_SIDEBAR_OPEN', payload: open })
-  const toggleSearch = () => dispatch({ type: 'TOGGLE_SEARCH' })
-  const toggleNotifications = () => dispatch({ type: 'TOGGLE_NOTIFICATIONS' })
-  const toggleMobileMenu = () => dispatch({ type: 'TOGGLE_MOBILE_MENU' })
-  const setMobileMenuOpen = (open: boolean) => dispatch({ type: 'SET_MOBILE_MENU_OPEN', payload: open })
-  const setTheme = (theme: 'light' | 'dark') => dispatch({ type: 'SET_THEME', payload: theme })
-  const resetUI = () => dispatch({ type: 'RESET_UI' })
+  // Memoized convenience functions to prevent re-renders
+  const toggleSidebar = useCallback(() => dispatch({ type: 'TOGGLE_SIDEBAR' }), [])
+  const setSidebarOpen = useCallback((open: boolean) => dispatch({ type: 'SET_SIDEBAR_OPEN', payload: open }), [])
+  const toggleSearch = useCallback(() => dispatch({ type: 'TOGGLE_SEARCH' }), [])
+  const toggleNotifications = useCallback(() => dispatch({ type: 'TOGGLE_NOTIFICATIONS' }), [])
+  const toggleMobileMenu = useCallback(() => dispatch({ type: 'TOGGLE_MOBILE_MENU' }), [])
+  const setMobileMenuOpen = useCallback((open: boolean) => dispatch({ type: 'SET_MOBILE_MENU_OPEN', payload: open }), [])
+  const setTheme = useCallback((theme: 'light' | 'dark') => dispatch({ type: 'SET_THEME', payload: theme }), [])
+  const resetUI = useCallback(() => dispatch({ type: 'RESET_UI' }), [])
 
   const value: UIContextType = {
     state,

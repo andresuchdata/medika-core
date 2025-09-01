@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -25,8 +26,16 @@ export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
       <div className="flex items-center justify-between gap-4">
-        {/* Left side - Search only */}
-        <div className="flex items-center gap-3">
+        {/* Left side - Logo and search */}
+        <div className="flex items-center gap-6">
+          {/* Logo - clickable to dashboard */}
+          <Link href="/dashboard" className="flex items-center space-x-3 hover:opacity-80 transition-opacity">
+            <div className="h-8 w-8 bg-blue-600 rounded-full flex items-center justify-center">
+              <span className="text-white text-sm font-bold">M</span>
+            </div>
+            <h1 className="text-lg font-bold text-gray-900">Medika</h1>
+          </Link>
+          
           {/* Search - hidden on mobile, visible on desktop */}
           <div className="hidden md:flex flex-1 max-w-lg">
             <div className="relative w-full">
