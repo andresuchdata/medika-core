@@ -1,5 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { TimePicker } from '@/components/ui/time-picker'
 import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
@@ -59,7 +60,7 @@ export default function MobileNewAppointmentPage() {
           
           <div className="space-y-2">
             <Label htmlFor="time">Time</Label>
-            <Input type="time" id="time" />
+            <TimePicker id="time" name="time" minuteStep={5} />
           </div>
         </div>
         

@@ -37,7 +37,7 @@ export default function MobileLayout({ children }: MobileLayoutProps) {
       <SwipeIndicator onClick={() => setMobileMenuOpen(true)} />
       
       {/* Main content - full height, scrollable */}
-      <main className="flex-1 overflow-y-auto bg-gray-50 px-4 py-4">
+      <main className="flex-1 overflow-y-auto bg-gray-50 px-2 py-4">
         {children}
       </main>
       
