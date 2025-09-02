@@ -82,19 +82,20 @@ export const useAuthStore = create<AuthState>()(
             })
 
             const data = await response.json()
+            const { data: loginData } = data
 
-            if (data.success && data.token && data.user) {
+            if (data.success && loginData) {
               const userObj = {
-                id: data.user.id,
-                email: data.user.email,
-                name: data.user.name,
-                role: data.user.role,
-                organizationId: data.user.organization_id,
-                isActive: data.user.is_active
+                id: loginData.user.id,
+                email: loginData.user.email,
+                name: loginData.user.name,
+                role: loginData.user.role,
+                organizationId: loginData.user.organization_id,
+                isActive: loginData.user.is_active
               }
 
               set({
-                token: data.token,
+                token: loginData.token,
                 user: userObj,
                 isAuthenticated: true,
                 isLoading: false

@@ -120,8 +120,14 @@ export function useRouteGuard() {
 // Component to show device mismatch warning
 export function DeviceMismatchWarning() {
   const { shouldRedirect, appropriateRoute, deviceType, currentPath } = useRouteGuard()
+  const [isClient, setIsClient] = useState(false)
 
-  if (!shouldRedirect) return null
+  useEffect(() => {
+    setIsClient(true)
+  }, [])
+
+  // Don't render on server to prevent hydration mismatch
+  if (!isClient || !shouldRedirect) return null
 
   return (
     <div className="fixed top-4 right-4 z-50 bg-yellow-50 border border-yellow-200 rounded-lg p-4 max-w-sm shadow-lg">

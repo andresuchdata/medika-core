@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Stethoscope, Eye, EyeOff, ArrowLeft } from 'lucide-react'
-import { useAuth } from '@/lib/auth/auth-context'
+import { useAuth } from '@/lib/stores'
 
 export default function MobileLoginPage() {
   const [email, setEmail] = useState('')
@@ -36,13 +36,16 @@ export default function MobileLoginPage() {
 
     const result = await login(email, password)
     
+    console.log('resssss', result)
     if (result.success) {
-      // Get return URL and redirect
+      // Get return URL and redirect immediately
       const returnUrl = searchParams.get('returnUrl') || 
                        localStorage.getItem('auth_return_url') || 
                        '/mobile/dashboard'
       localStorage.removeItem('auth_return_url')
-      router.push(returnUrl)
+      
+      // Force immediate redirect
+      window.location.href = returnUrl
     } else {
       setError(result.error || 'Login failed')
     }
@@ -98,6 +101,7 @@ export default function MobileLoginPage() {
                   required
                   disabled={isLoading}
                   className="h-12 text-base"
+                  autoComplete="username"
                 />
               </div>
 
@@ -113,6 +117,7 @@ export default function MobileLoginPage() {
                     required
                     disabled={isLoading}
                     className="h-12 text-base pr-12"
+                    autoComplete="current-password"
                   />
                   <Button
                     type="button"
