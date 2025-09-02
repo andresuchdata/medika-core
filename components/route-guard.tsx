@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useDevice } from '@/lib/utils/device'
+import { useDevice } from '@/lib/stores'
 import { useRouter, usePathname } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -12,7 +12,7 @@ interface RouteGuardProps {
 }
 
 export function RouteGuard({ children }: RouteGuardProps) {
-  const { deviceType, isMobile, isTablet, isDesktop } = useDevice()
+  const { getAppropriateRoute, deviceType } = useDevice()
   const router = useRouter()
   const pathname = usePathname()
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -24,53 +24,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
       return
     }
 
-    // Wait for device detection to be ready
-    if (deviceType === 'desktop' && !isDesktop && !isMobile && !isTablet) {
-      return
-    }
-
-    // Determine the appropriate route based on device type
-    const getAppropriateRoute = () => {
-      // If already on mobile route, stay there
-      if (pathname.startsWith('/mobile')) {
-        return null
-      }
-
-      // If already on desktop route, stay there
-      if (pathname.startsWith('/dashboard') || pathname === '/') {
-        return null
-      }
-
-      // For mobile/tablet devices, redirect to mobile routes
-      if (isMobile || isTablet) {
-        if (pathname === '/') {
-          return '/mobile/dashboard'
-        }
-        if (pathname.startsWith('/dashboard')) {
-          return `/mobile${pathname}`
-        }
-        if (pathname === '/login') {
-          return '/mobile/login'
-        }
-        if (pathname === '/register') {
-          return '/mobile/register'
-        }
-      }
-
-      // For desktop devices, redirect to desktop routes
-      if (isDesktop) {
-        if (pathname.startsWith('/mobile')) {
-          return pathname.replace('/mobile', '')
-        }
-        if (pathname === '/') {
-          return '/dashboard'
-        }
-      }
-
-      return null
-    }
-
-    const targetRoute = getAppropriateRoute()
+    const targetRoute = getAppropriateRoute(pathname)
 
     if (targetRoute && targetRoute !== pathname) {
       setIsRedirecting(true)
@@ -81,7 +35,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
         router.push(targetRoute)
       }, 800)
     }
-  }, [deviceType, isMobile, isTablet, isDesktop, pathname, router])
+  }, [getAppropriateRoute, pathname, router])
 
   // Show redirect message
   if (isRedirecting && redirectPath) {
@@ -136,7 +90,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
 
 // Hook to check if current route is appropriate for device
 export function useRouteGuard() {
-  const { deviceType, isMobile, isTablet, isDesktop } = useDevice()
+  const { deviceType, isMobile, isTablet, isDesktop, getAppropriateRoute } = useDevice()
   const pathname = usePathname()
 
   const isRouteAppropriate = () => {
@@ -149,19 +103,7 @@ export function useRouteGuard() {
     return true
   }
 
-  const getAppropriateRoute = () => {
-    if (isMobile || isTablet) {
-      if (pathname === '/') return '/mobile/dashboard'
-      if (pathname.startsWith('/dashboard')) return `/mobile${pathname}`
-      if (pathname === '/login') return '/mobile/login'
-      if (pathname === '/register') return '/mobile/register'
-    }
-    if (isDesktop) {
-      if (pathname.startsWith('/mobile')) return pathname.replace('/mobile', '')
-      if (pathname === '/') return '/dashboard'
-    }
-    return null
-  }
+  const appropriateRoute = getAppropriateRoute(pathname)
 
   return {
     deviceType,
@@ -170,8 +112,8 @@ export function useRouteGuard() {
     isDesktop,
     currentPath: pathname,
     isRouteAppropriate: isRouteAppropriate(),
-    appropriateRoute: getAppropriateRoute(),
-    shouldRedirect: getAppropriateRoute() !== null && getAppropriateRoute() !== pathname
+    appropriateRoute,
+    shouldRedirect: appropriateRoute !== null && appropriateRoute !== pathname
   }
 }
 

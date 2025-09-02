@@ -14,6 +14,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu'
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react'
+import { useAuth } from '@/lib/auth/auth-context'
 
 interface HeaderProps {
   onSidebarToggle?: () => void
@@ -22,6 +23,7 @@ interface HeaderProps {
 
 export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
   const [notifications] = useState(3) // Mock notification count
+  const { user, logout } = useAuth()
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
@@ -77,16 +79,21 @@ export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
               <Button variant="ghost" className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
                   <AvatarImage src="/avatars/admin.jpg" alt="User" />
-                  <AvatarFallback>SA</AvatarFallback>
+                  <AvatarFallback>
+                    {user?.name?.split(' ').map(n => n[0]).join('').toUpperCase() || 'U'}
+                  </AvatarFallback>
                 </Avatar>
-                <span className="hidden sm:block text-sm font-medium">Dr. Sarah Johnson</span>
+                <span className="hidden sm:block text-sm font-medium">{user?.name || 'User'}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end">
               <DropdownMenuLabel>
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">Dr. Sarah Johnson</p>
-                  <p className="text-xs text-gray-500">admin@medika.com</p>
+                  <p className="text-sm font-medium">{user?.name || 'User'}</p>
+                  <p className="text-xs text-gray-500">{user?.email || ''}</p>
+                  <Badge variant="outline" className="w-fit text-xs">
+                    {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
+                  </Badge>
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
@@ -99,7 +106,7 @@ export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
                 Settings
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log out
               </DropdownMenuItem>

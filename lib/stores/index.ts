@@ -1,6 +1,8 @@
 export { useAppointmentStore } from './appointment-store'
 export { usePatientStore } from './patient-store'
 export { useUIStore } from './ui-store'
+export { useDeviceStore, useDevice, useDeviceRedirect } from './device-store'
+export { useAuthStore, useAuth, useUser, useAuthStatus } from './auth-store'
 
 // Convenience hooks
 export {

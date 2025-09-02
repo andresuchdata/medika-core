@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { RouteGuard } from "@/components/route-guard";
 import { UIProvider } from "@/lib/context/ui-context";
+import { AuthProvider } from "@/lib/auth/auth-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -31,12 +32,14 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <UIProvider>
-          <RouteGuard>
-            {children}
-          </RouteGuard>
-          <Toaster />
-        </UIProvider>
+        <AuthProvider>
+          <UIProvider>
+            <RouteGuard>
+              {children}
+            </RouteGuard>
+            <Toaster />
+          </UIProvider>
+        </AuthProvider>
       </body>
     </html>
   );

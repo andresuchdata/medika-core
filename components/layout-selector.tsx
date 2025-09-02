@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useDevice } from '@/lib/utils/device'
+import { useDevice } from '@/lib/stores'
 import { useRouter, usePathname } from 'next/navigation'
 
 interface LayoutSelectorProps {
@@ -9,7 +9,7 @@ interface LayoutSelectorProps {
 }
 
 export function LayoutSelector({ children }: LayoutSelectorProps) {
-  const { deviceType, isMobile } = useDevice()
+  const { getAppropriateRoute } = useDevice()
   const router = useRouter()
   const pathname = usePathname()
   const [hasInitialized, setHasInitialized] = useState(false)
@@ -18,30 +18,15 @@ export function LayoutSelector({ children }: LayoutSelectorProps) {
     // Only redirect on initial page load, not on subsequent navigation
     if (hasInitialized || pathname.startsWith('/api')) return
 
-    // Check if we need to redirect based on device type
-    const shouldRedirectToMobile = isMobile && !pathname.startsWith('/mobile')
-    const shouldRedirectToDesktop = !isMobile && pathname.startsWith('/mobile')
-
-    // Redirect to mobile for all dashboard routes and root routes
-    const shouldRedirectToMobileRoute = shouldRedirectToMobile && (
-      pathname === '/' || 
-      pathname === '/login' || 
-      pathname === '/register' ||
-      pathname.startsWith('/dashboard')
-    )
+    const targetRoute = getAppropriateRoute(pathname)
     
-    if (shouldRedirectToMobileRoute) {
-      const mobilePath = `/mobile${pathname}`
-      router.push(mobilePath)
-    } else if (shouldRedirectToDesktop && pathname.startsWith('/mobile')) {
-      const desktopPath = pathname.replace('/mobile', '')
-      router.push(desktopPath)
-    } else {
+    if (targetRoute && targetRoute !== pathname) {
+      router.push(targetRoute)
     }
 
     // Mark as initialized to prevent further redirects
     setHasInitialized(true)
-  }, [deviceType, isMobile, pathname, router, hasInitialized])
+  }, [getAppropriateRoute, pathname, router, hasInitialized])
 
   // Force re-evaluation when device type changes
   useEffect(() => {

@@ -1,52 +1,50 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Stethoscope, Eye, EyeOff } from 'lucide-react'
+import { useAuth } from '@/lib/auth/auth-context'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const { login, isLoading, isAuthenticated } = useAuth()
+
+  // Redirect authenticated users
+  useEffect(() => {
+    if (isAuthenticated) {
+      const returnUrl = searchParams.get('returnUrl') || 
+                       localStorage.getItem('auth_return_url') || 
+                       '/dashboard'
+      localStorage.removeItem('auth_return_url')
+      router.push(returnUrl)
+    }
+  }, [isAuthenticated, router, searchParams])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setIsLoading(true)
     setError('')
 
-    try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
-
-      const data = await response.json()
-
-      if (data.success) {
-        // Store token in localStorage (in production, use httpOnly cookies)
-        localStorage.setItem('token', data.data.token)
-        localStorage.setItem('user', JSON.stringify(data.data.user))
-        
-        // Redirect to dashboard
-        router.push('/dashboard')
-      } else {
-        setError(data.error || 'Login failed')
-      }
-    } catch (err) {
-      setError('An error occurred. Please try again.')
-    } finally {
-      setIsLoading(false)
+    const result = await login(email, password)
+    
+    if (result.success) {
+      // Get return URL and redirect
+      const returnUrl = searchParams.get('returnUrl') || 
+                       localStorage.getItem('auth_return_url') || 
+                       '/dashboard'
+      localStorage.removeItem('auth_return_url')
+      router.push(returnUrl)
+    } else {
+      setError(result.error || 'Login failed')
     }
   }
 
