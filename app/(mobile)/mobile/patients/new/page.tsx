@@ -10,9 +10,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { PhoneInput } from '@/components/ui/phone-input'
 import { User, ArrowLeft } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useAppointmentStore } from '@/lib/stores'
 
 const patientSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -33,6 +35,11 @@ const patientSchema = z.object({
 type PatientFormValues = z.infer<typeof patientSchema>
 
 export default function MobileNewPatientPage() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const fromAppointment = searchParams.get('from') === 'appointment'
+  const { newAppointmentForm: appointmentFormData } = useAppointmentStore()
+  
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),
     defaultValues: {
@@ -55,22 +62,66 @@ export default function MobileNewPatientPage() {
   const onSubmit = (data: PatientFormValues) => {
     // TODO: handle submit
     console.log('Patient form submit', data)
+    
+    // If coming from appointment page, go back to appointment with success message
+    if (fromAppointment) {
+      router.push('/mobile/appointments/new?newPatient=true')
+    } else {
+      router.push('/mobile/patients')
+    }
   }
 
   return (
     <div className="space-y-4 pb-20">
       {/* Page header */}
       <div className="flex items-center gap-3">
-        <Link href="/mobile/patients">
-          <Button variant="ghost" size="icon">
-            <ArrowLeft className="h-4 w-4" />
-          </Button>
-        </Link>
+        <Button 
+          variant="ghost" 
+          size="icon"
+          onClick={() => {
+            if (fromAppointment) {
+              router.push('/mobile/appointments/new?newPatient=true')
+            } else {
+              router.push('/mobile/patients')
+            }
+          }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
         <div>
           <h1 className="text-xl font-bold text-gray-900">New Patient</h1>
-          <p className="text-sm text-gray-600">Add a new patient to the system</p>
+          <p className="text-sm text-gray-600">
+            {fromAppointment ? 'Add a new patient for appointment' : 'Add a new patient to the system'}
+          </p>
         </div>
       </div>
+      
+      {/* Breadcrumb navigation */}
+      {fromAppointment && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Link href="/mobile/appointments" className="hover:text-foreground">
+              Appointments
+            </Link>
+            <span>/</span>
+            <Link href="/mobile/appointments/new" className="hover:text-foreground">
+              New Appointment
+            </Link>
+            <span>/</span>
+            <span className="text-foreground">New Patient</span>
+          </div>
+          
+          {/* Form state preservation indicator */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+              <p className="text-sm text-blue-800">
+                Your appointment details are saved. You'll return to complete the appointment after adding the patient.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Patient form */}
       <Card>
@@ -309,16 +360,28 @@ export default function MobileNewPatientPage() {
               <Button type="submit" className="flex-1">
                 Add Patient
               </Button>
-              <Link href="/mobile/patients">
-                <Button variant="outline" className="flex-1">
-                  Cancel
-                </Button>
-              </Link>
+              <Button 
+                variant="outline" 
+                className="flex-1"
+                onClick={() => {
+                  if (fromAppointment) {
+                    router.push('/mobile/appointments/new?newPatient=true')
+                  } else {
+                    router.push('/mobile/patients')
+                  }
+                }}
+              >
+                Cancel
+              </Button>
             </div>
             </form>
           </Form>
         </CardContent>
       </Card>
+      
+      {/* Bottom spacing to prevent overlap with bottom navigation */}
+      <div className="h-20"></div>
     </div>
   )
 }
+

@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import * as SelectPrimitive from "@radix-ui/react-select"
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from "lucide-react"
+import { CheckIcon, ChevronDownIcon, ChevronUpIcon, Search, Plus } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -54,8 +54,41 @@ function SelectContent({
   className,
   children,
   position = "popper",
+  searchable = false,
+  onAddNew,
+  addNewLabel = "Add new",
   ...props
-}: React.ComponentProps<typeof SelectPrimitive.Content>) {
+}: React.ComponentProps<typeof SelectPrimitive.Content> & {
+  searchable?: boolean
+  onAddNew?: () => void
+  addNewLabel?: string
+}) {
+  const [searchQuery, setSearchQuery] = React.useState("")
+  const [filteredChildren, setFilteredChildren] = React.useState(children)
+
+  React.useEffect(() => {
+    if (!searchable) {
+      setFilteredChildren(children)
+      return
+    }
+
+    if (!searchQuery) {
+      setFilteredChildren(children)
+      return
+    }
+
+    // Filter children based on search query
+    const filtered = React.Children.toArray(children).filter((child) => {
+      if (React.isValidElement(child) && child.type === SelectItem) {
+        const childText = (child.props as any)?.children?.toString() || ""
+        return childText.toLowerCase().includes(searchQuery.toLowerCase())
+      }
+      return true
+    })
+
+    setFilteredChildren(filtered)
+  }, [searchQuery, children, searchable])
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -70,6 +103,32 @@ function SelectContent({
         {...props}
       >
         <SelectScrollUpButton />
+        {searchable && (
+          <div className="p-2 border-b">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-8 pr-3 py-2 text-sm bg-transparent border-none outline-none placeholder:text-muted-foreground"
+              />
+            </div>
+          </div>
+        )}
+        {onAddNew && (
+          <div className="p-1">
+            <button
+              type="button"
+              onClick={onAddNew}
+              className="w-full flex items-center gap-2 px-2 py-1.5 text-sm text-primary hover:bg-accent hover:text-accent-foreground rounded-sm cursor-pointer"
+            >
+              <Plus className="h-4 w-4" />
+              {addNewLabel}
+            </button>
+          </div>
+        )}
         <SelectPrimitive.Viewport
           className={cn(
             "p-1",
@@ -77,7 +136,7 @@ function SelectContent({
               "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-1"
           )}
         >
-          {children}
+          {filteredChildren}
         </SelectPrimitive.Viewport>
         <SelectScrollDownButton />
       </SelectPrimitive.Content>

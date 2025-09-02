@@ -6,14 +6,14 @@ import { MobileBottomNav } from '@/components/mobile/mobile-bottom-nav'
 import { MobileMenu } from '@/components/mobile/mobile-menu'
 import { SwipeIndicator } from '@/components/mobile/swipe-indicator'
 import { DeviceMismatchWarning } from '@/components/route-guard'
-import { useUI } from '@/lib/context/ui-context'
+import { useMobileMenu } from '@/lib/stores'
 
 interface MobileLayoutProps {
   children: ReactNode
 }
 
 export default function MobileLayout({ children }: MobileLayoutProps) {
-  const { state: { mobileMenuOpen }, setMobileMenuOpen } = useUI()
+  const { mobileMenuOpen, setMobileMenuOpen } = useMobileMenu()
 
   const handleCloseMenu = () => {
     setMobileMenuOpen(false)
