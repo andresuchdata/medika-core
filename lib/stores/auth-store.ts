@@ -8,6 +8,8 @@ interface User {
   name: string
   role: string
   organizationId?: string
+  phone?: string
+  avatar?: string
   isActive: boolean
 }
 
@@ -24,6 +26,7 @@ interface AuthState {
   logout: () => void
   checkAuth: () => Promise<boolean>
   setLoading: (loading: boolean) => void
+  updateAvatar: (avatarUrl: string) => void
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -50,12 +53,25 @@ export const useAuthStore = create<AuthState>()(
               // TODO: Verify token with backend in production
               // For now, just check if token exists and user data is valid
               if (parsedUser.id && parsedUser.email) {
+                // Ensure all required fields are present
+                const userObj = {
+                  id: parsedUser.id,
+                  email: parsedUser.email,
+                  name: parsedUser.name || '',
+                  role: parsedUser.role || '',
+                  organizationId: parsedUser.organizationId,
+                  phone: parsedUser.phone,
+                  avatar: parsedUser.avatar,
+                  isActive: parsedUser.isActive !== undefined ? parsedUser.isActive : true
+                }
+                
                 set({
                   token: storedToken,
-                  user: parsedUser,
+                  user: userObj,
                   isAuthenticated: true,
                   isLoading: false
                 })
+
                 return true
               }
             }
@@ -91,6 +107,8 @@ export const useAuthStore = create<AuthState>()(
                 name: loginData.user.name,
                 role: loginData.user.role,
                 organizationId: loginData.user.organization_id,
+                phone: loginData.user.phone,
+                avatar: loginData.user.avatar_url,
                 isActive: loginData.user.is_active
               }
 
@@ -146,6 +164,8 @@ export const useAuthStore = create<AuthState>()(
                 name: data.user.name,
                 role: data.user.role,
                 organizationId: data.user.organization_id,
+                phone: data.user.phone,
+                avatar: data.user.avatar_url,
                 isActive: data.user.is_active
               }
 
@@ -199,6 +219,20 @@ export const useAuthStore = create<AuthState>()(
           const loginPath = currentPath.startsWith('/mobile') ? '/mobile/login' : '/login'
           window.location.href = loginPath
         },
+        
+        updateAvatar: (avatarUrl: string) => {
+          set(state => {
+            if (state.user) {
+              const updatedUser = { ...state.user, avatar: avatarUrl }
+              
+              // Update localStorage
+              localStorage.setItem('auth_user', JSON.stringify(updatedUser))
+              
+              return { user: updatedUser }
+            }
+            return state
+          })
+        },
       }),
       {
         name: 'auth-storage',
@@ -226,6 +260,7 @@ if (typeof window !== 'undefined') {
 // Convenience hooks
 export const useAuth = () => {
   const store = useAuthStore()
+
   return {
     user: store.user,
     token: store.token,
@@ -235,6 +270,7 @@ export const useAuth = () => {
     register: store.register,
     logout: store.logout,
     checkAuth: store.checkAuth,
+    updateAvatar: store.updateAvatar,
   }
 }
 
