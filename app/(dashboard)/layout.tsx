@@ -5,7 +5,6 @@ import { Sidebar } from '@/components/dashboard/sidebar'
 import { Header } from '@/components/dashboard/header'
 import { DeviceMismatchWarning } from '@/components/route-guard'
 import { useSidebar } from '@/lib/context/ui-context'
-import { UIDebug } from '@/components/debug/ui-debug'
 import { AuthGuard } from '@/components/auth/auth-guard'
 
 interface DashboardLayoutProps {
@@ -37,9 +36,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             {children}
           </main>
         </div>
-
-        {/* Debug panel - only in development */}
-        {process.env.NODE_ENV === 'development' && <UIDebug />}
       </div>
     </AuthGuard>
   )

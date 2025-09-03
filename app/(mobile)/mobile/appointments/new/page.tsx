@@ -14,7 +14,7 @@ import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
-import { useAppointmentStore } from '@/lib/stores'
+import { useAppointmentFormStore } from '@/lib/stores'
 
 const appointmentSchema = z.object({
   patient: z.string().min(1, 'Patient is required'),
@@ -36,7 +36,7 @@ export default function MobileNewAppointmentPage() {
     updateNewAppointmentForm: updateFormData, 
     resetNewAppointmentForm: resetForm, 
     isFormDirty 
-  } = useAppointmentStore()
+  } = useAppointmentFormStore()
   
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentSchema),

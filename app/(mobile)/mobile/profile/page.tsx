@@ -11,11 +11,13 @@ import { Organization } from '@/types'
 import { AvatarUpload } from '@/components/ui/avatar-upload'
 import { toast } from 'sonner'
 import { getUserInitials, formatUserRole } from '@/lib/utils/user'
+import { useAvatar } from '@/lib/hooks/use-avatar'
 
 export default function MobileProfilePage() {
-  const { user, logout, updateAvatar } = useAuth()
+  const { user, logout } = useAuth()
   const organizationStore = useOrganizationStore()
   const [organization, setOrganization] = useState<Organization | null>(null)
+  const { handleAvatarChange, handleAvatarRemove } = useAvatar()
 
   // Fetch organization data if user has organizationId
   useEffect(() => {
@@ -31,40 +33,6 @@ export default function MobileProfilePage() {
   // Handle logout
   const handleLogout = () => {
     logout()
-  }
-
-  // Handle avatar change
-  const handleAvatarChange = async (avatarUrl: string) => {
-    if (!user) return
-
-    try {
-      // Call the backend API to update avatar
-      const response = await fetch(`/api/users/${user.id}/avatar`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({ avatar_url: avatarUrl }),
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to update avatar')
-      }
-
-      const data = await response.json()
-      
-      if (data.success) {
-        // Update the auth store with new avatar
-        updateAvatar(avatarUrl)
-        toast.success('Avatar updated successfully!')
-      } else {
-        throw new Error(data.message || 'Failed to update avatar')
-      }
-    } catch (error) {
-      console.error('Avatar update failed:', error)
-      toast.error('Failed to update avatar. Please try again.')
-    }
   }
 
   if (!user) {
@@ -87,6 +55,7 @@ export default function MobileProfilePage() {
             currentAvatar={user.avatar}
             userName={user.name}
             onAvatarChange={handleAvatarChange}
+            onAvatarRemove={handleAvatarRemove}
             isEditable={true}
             size="lg"
           />

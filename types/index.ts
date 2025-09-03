@@ -26,6 +26,74 @@ export interface UserProfile {
   bloodType?: string
 }
 
+// Patient Types
+export interface Patient {
+  id: string
+  name: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  age: number
+  gender: 'male' | 'female' | 'other'
+  avatar?: string | null
+  address: {
+    street: string
+    city: string
+    state: string
+    zipCode: string
+    country: string
+  }
+  emergencyContact: {
+    name: string
+    relationship: string
+    phone: string
+  }
+  medicalHistory: MedicalCondition[]
+  allergies: string[]
+  medications: Medication[]
+  lastVisit?: string
+  nextAppointment?: string
+  status: 'active' | 'inactive'
+  organizationId: string
+}
+
+export interface MedicalCondition {
+  condition: string
+  diagnosedDate: string
+  status: 'active' | 'resolved' | 'chronic'
+  notes?: string
+}
+
+export interface Medication {
+  name: string
+  dosage: string
+  prescribedDate: string
+  status: 'active' | 'discontinued' | 'completed'
+}
+
+// API Response Types for Patients
+export interface PatientsData {
+  patients: Patient[]
+  pagination: {
+    page: number
+    limit: number
+    total: number
+    totalPages: number
+  }
+  stats: {
+    total: number
+    active: number
+    inactive: number
+    averageAge: number
+    genderDistribution: {
+      male: number
+      female: number
+    }
+  }
+}
+
+export type PatientsResponse = ApiResponse<PatientsData>
+
 // Organization Types
 export interface Organization {
   id: string
@@ -64,6 +132,26 @@ export interface Appointment {
   notes?: string
   createdAt: Date
   updatedAt: Date
+}
+
+// Extended Appointment type for API responses (includes patient and doctor names)
+export interface AppointmentWithNames {
+  id: string
+  patientId: string
+  patientName: string
+  doctorId: string
+  doctorName: string
+  organizationId: string
+  roomId?: string
+  date: string // API returns date as string
+  startTime: string
+  endTime: string
+  duration: number
+  status: AppointmentStatus
+  type: AppointmentType
+  notes?: string
+  createdAt: string // API returns as ISO string
+  updatedAt: string // API returns as ISO string
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'

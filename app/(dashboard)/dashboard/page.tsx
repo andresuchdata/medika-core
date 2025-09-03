@@ -1,3 +1,5 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -12,8 +14,17 @@ import {
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
+import { useQueue, usePatients } from '@/lib/hooks/use-data-fetching'
+import { Shimmer } from '@/components/ui/shimmer'
 
 export default function DashboardPage() {
+  const { data: queueData, loading: queueLoading } = useQueue()
+  const { data: patientsData, loading: patientsLoading } = usePatients()
+
+  // Extract data with fallbacks
+  const queueStats = (queueData as any)?.stats || { total: 0, waiting: 0, inProgress: 0, averageWaitTime: '0 min' }
+  const patientsCount = (patientsData as any)?.stats?.total || 0
+
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Page header */}
@@ -39,7 +50,11 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">1,234</div>
+            {patientsLoading ? (
+              <Shimmer width={60} height={32} className="rounded" />
+            ) : (
+              <div className="text-xl sm:text-2xl font-bold">{patientsCount}</div>
+            )}
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+12%</span> from last month
             </p>
@@ -52,7 +67,11 @@ export default function DashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">24</div>
+            {queueLoading ? (
+              <Shimmer width={40} height={32} className="rounded" />
+            ) : (
+              <div className="text-xl sm:text-2xl font-bold">24</div>
+            )}
             <p className="text-xs text-muted-foreground">
               <span className="text-blue-600">8</span> completed, <span className="text-orange-600">16</span> pending
             </p>
@@ -65,9 +84,13 @@ export default function DashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">7</div>
+            {queueLoading ? (
+              <Shimmer width={20} height={32} className="rounded" />
+            ) : (
+              <div className="text-xl sm:text-2xl font-bold">{queueStats.total}</div>
+            )}
             <p className="text-xs text-muted-foreground">
-              Avg wait: <span className="text-green-600">15 min</span>
+              Avg wait: <span className="text-green-600">{queueStats.averageWaitTime}</span>
             </p>
           </CardContent>
         </Card>

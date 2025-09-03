@@ -14,7 +14,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useAppointmentStore } from '@/lib/stores'
+import { useAppointmentFormStore } from '@/lib/stores'
 
 const patientSchema = z.object({
   firstName: z.string().min(1, 'First name is required'),
@@ -38,7 +38,7 @@ export default function MobileNewPatientPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromAppointment = searchParams.get('from') === 'appointment'
-  const { newAppointmentForm: appointmentFormData } = useAppointmentStore()
+  const { newAppointmentForm: appointmentFormData } = useAppointmentFormStore()
   
   const form = useForm<PatientFormValues>({
     resolver: zodResolver(patientSchema),

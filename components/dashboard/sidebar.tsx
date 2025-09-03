@@ -23,11 +23,11 @@ import {
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
-  { name: 'Patients', href: '/dashboard/patients', icon: Users },
-  { name: 'Doctors', href: '/dashboard/doctors', icon: Stethoscope },
-  { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
   { name: 'Queue', href: '/dashboard/queue', icon: Clock },
+  { name: 'Appointments', href: '/dashboard/appointments', icon: Calendar },
+  { name: 'Patients', href: '/dashboard/patients', icon: Users },
   { name: 'Medical Records', href: '/dashboard/records', icon: FileText },
+  { name: 'Doctors', href: '/dashboard/doctors', icon: Stethoscope },
   { name: 'Organizations', href: '/dashboard/organizations', icon: Building2 },
   { name: 'Notifications', href: '/dashboard/notifications', icon: Bell },
   { name: 'Settings', href: '/dashboard/settings', icon: Settings },

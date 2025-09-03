@@ -13,9 +13,9 @@ import {
 
 const mobileNavigation = [
   { name: 'Dashboard', href: '/mobile/dashboard', icon: Home },
-  { name: 'Patients', href: '/mobile/patients', icon: Users },
-  { name: 'Appointments', href: '/mobile/appointments', icon: Calendar },
   { name: 'Queue', href: '/mobile/queue', icon: Clock },
+  { name: 'Appointments', href: '/mobile/appointments', icon: Calendar },
+  { name: 'Patients', href: '/mobile/patients', icon: Users },
   { name: 'Profile', href: '/mobile/profile', icon: User },
 ]
 
