@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import { persist } from 'zustand/middleware'
+import { authService } from '@/lib/auth/auth-service'
 
 interface User {
   id: string
@@ -89,49 +90,40 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true })
           
           try {
-            const response = await fetch('/api/auth/login', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ email, password }),
-            })
+            const response = await authService.login({ email, password })
 
-            const data = await response.json()
-            const { data: loginData } = data
-
-            if (data.success && loginData) {
+            if (response.success && response.data) {
               const userObj = {
-                id: loginData.user.id,
-                email: loginData.user.email,
-                name: loginData.user.name,
-                role: loginData.user.role,
-                organizationId: loginData.user.organization_id,
-                phone: loginData.user.phone,
-                avatar: loginData.user.avatar_url,
-                isActive: loginData.user.is_active
+                id: response.data.user.id,
+                email: response.data.user.email,
+                name: response.data.user.name,
+                role: response.data.user.role,
+                organizationId: response.data.user.organizationId,
+                phone: response.data.user.phone,
+                avatar: response.data.user.avatar,
+                isActive: response.data.user.isActive
               }
 
               set({
-                token: loginData.token,
+                token: response.data.token,
                 user: userObj,
                 isAuthenticated: true,
                 isLoading: false
               })
               
               // Store in localStorage and set cookie for middleware
-              localStorage.setItem('auth_token', data.token)
+              localStorage.setItem('auth_token', response.data.token)
               localStorage.setItem('auth_user', JSON.stringify(userObj))
               
               // Set cookie for middleware to read
-              document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
+              document.cookie = `auth_token=${response.data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
               
               return { success: true }
             } else {
               set({ isLoading: false })
               return { 
                 success: false, 
-                error: data.message || data.error || 'Login failed' 
+                error: response.message || 'Login failed' 
               }
             }
           } catch (error) {
@@ -147,48 +139,40 @@ export const useAuthStore = create<AuthState>()(
           set({ isLoading: true })
           
           try {
-            const response = await fetch('/api/auth/register', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ name, email, password, role }),
-            })
+            const response = await authService.register({ name, email, password, role })
 
-            const data = await response.json()
-
-            if (data.success && data.token && data.user) {
+            if (response.success && response.data) {
               const userObj = {
-                id: data.user.id,
-                email: data.user.email,
-                name: data.user.name,
-                role: data.user.role,
-                organizationId: data.user.organization_id,
-                phone: data.user.phone,
-                avatar: data.user.avatar_url,
-                isActive: data.user.is_active
+                id: response.data.user.id,
+                email: response.data.user.email,
+                name: response.data.user.name,
+                role: response.data.user.role,
+                organizationId: response.data.user.organizationId,
+                phone: response.data.user.phone,
+                avatar: response.data.user.avatar,
+                isActive: response.data.user.isActive
               }
 
               set({
-                token: data.token,
+                token: response.data.token,
                 user: userObj,
                 isAuthenticated: true,
                 isLoading: false
               })
               
               // Store in localStorage and set cookie for middleware
-              localStorage.setItem('auth_token', data.token)
+              localStorage.setItem('auth_token', response.data.token)
               localStorage.setItem('auth_user', JSON.stringify(userObj))
               
               // Set cookie for middleware to read
-              document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
+              document.cookie = `auth_token=${response.data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
               
               return { success: true }
             } else {
               set({ isLoading: false })
               return { 
                 success: false, 
-                error: data.message || data.error || 'Registration failed' 
+                error: response.message || 'Registration failed' 
               }
             }
           } catch (error) {

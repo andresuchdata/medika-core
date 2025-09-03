@@ -1,5 +1,6 @@
 import { useCallback } from 'react'
 import { useAuth } from '@/lib/stores/auth-store'
+import { authService } from '@/lib/auth/auth-service'
 import { toast } from 'sonner'
 
 interface UseAvatarReturn {
@@ -18,29 +19,15 @@ export function useAvatar(): UseAvatarReturn {
     }
 
     try {
-      // Call the backend API to update avatar
-      const response = await fetch(`/api/users/${user.id}/avatar`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-        body: JSON.stringify({ avatar_url: avatarUrl }),
-      })
+      // Call the backend API to update avatar using auth service
+      const response = await authService.updateAvatar(user.id, { avatar_url: avatarUrl })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      if (data.success) {
+      if (response.success) {
         // Update the auth store with new avatar
         updateAvatar(avatarUrl)
         toast.success('Avatar updated successfully!')
       } else {
-        throw new Error(data.message || 'Failed to update avatar')
+        throw new Error(response.message || 'Failed to update avatar')
       }
     } catch (error) {
       console.error('Avatar update failed:', error)
@@ -57,27 +44,15 @@ export function useAvatar(): UseAvatarReturn {
     }
 
     try {
-      // Call the backend API to remove avatar
-      const response = await fetch(`/api/users/${user.id}/avatar`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
-        },
-      })
+      // Call the backend API to remove avatar using auth service
+      const response = await authService.updateAvatar(user.id, { avatar_url: '' })
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      
-      if (data.success) {
+      if (response.success) {
         // Update the auth store with empty avatar
         updateAvatar('')
         toast.success('Avatar removed successfully!')
       } else {
-        throw new Error(data.message || 'Failed to remove avatar')
+        throw new Error(response.message || 'Failed to remove avatar')
       }
     } catch (error) {
       console.error('Avatar removal failed:', error)

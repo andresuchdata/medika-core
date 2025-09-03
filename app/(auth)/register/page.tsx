@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Stethoscope, Eye, EyeOff } from 'lucide-react'
 import { UserRole } from '@/types'
+import { authService } from '@/lib/auth/auth-service'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -49,25 +50,23 @@ export default function RegisterPage() {
     }
 
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
+      const response = await authService.register({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: formData.role,
+        organizationId: formData.organizationId || undefined,
       })
 
-      const data = await response.json()
-
-      if (data.success) {
+      if (response.success && response.data) {
         // Store token in localStorage (in production, use httpOnly cookies)
-        localStorage.setItem('token', data.data.token)
-        localStorage.setItem('user', JSON.stringify(data.data.user))
+        localStorage.setItem('token', response.data.token)
+        localStorage.setItem('user', JSON.stringify(response.data.user))
         
         // Redirect to dashboard
         router.push('/dashboard')
       } else {
-        setError(data.error || 'Registration failed')
+        setError(response.message || 'Registration failed')
       }
     } catch (err) {
       setError('An error occurred. Please try again.')

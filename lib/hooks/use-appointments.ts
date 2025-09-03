@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { AppointmentWithNames } from '@/types'
+import { appointmentService } from '@/lib/api/appointment-service'
 
 interface UseAppointmentsOptions {
   date?: string
@@ -29,19 +30,18 @@ export function useAppointments(options: UseAppointmentsOptions = {}): UseAppoin
     setError(null)
     
     try {
-      const params = new URLSearchParams()
-      if (date) params.append('date', date)
-      if (status) params.append('status', status)
-      if (doctorId) params.append('doctorId', doctorId)
-      if (patientId) params.append('patientId', patientId)
+      const params: any = {}
+      if (date) params.date = date
+      if (status) params.status = status
+      if (doctorId) params.doctorId = doctorId
+      if (patientId) params.patientId = patientId
 
-      const response = await fetch(`/api/appointments?${params.toString()}`)
-      const data = await response.json()
+      const response = await appointmentService.getAppointments(params)
 
-      if (data.success) {
-        setAppointments(data.data)
+      if (response.success && response.data) {
+        setAppointments(response.data.appointments)
       } else {
-        setError(data.error || 'Failed to fetch appointments')
+        setError(response.message || 'Failed to fetch appointments')
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -52,22 +52,21 @@ export function useAppointments(options: UseAppointmentsOptions = {}): UseAppoin
 
   const createAppointment = async (appointmentData: Partial<AppointmentWithNames>) => {
     try {
-      const response = await fetch('/api/appointments', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(appointmentData),
-      })
+      // Convert AppointmentWithNames to Appointment format for the API
+      const apiData = {
+        ...appointmentData,
+        date: appointmentData.date ? new Date(appointmentData.date) : undefined,
+        createdAt: appointmentData.createdAt ? new Date(appointmentData.createdAt) : undefined,
+        updatedAt: appointmentData.updatedAt ? new Date(appointmentData.updatedAt) : undefined,
+      }
+      const response = await appointmentService.createAppointment(apiData)
 
-      const data = await response.json()
-
-      if (data.success) {
+      if (response.success) {
         // Refresh the appointments list
         await fetchAppointments()
         return { success: true }
       } else {
-        return { success: false, error: data.error || 'Failed to create appointment' }
+        return { success: false, error: response.message || 'Failed to create appointment' }
       }
     } catch (err) {
       return { 

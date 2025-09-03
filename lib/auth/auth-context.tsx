@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import { authService } from './auth-service'
 
 interface User {
   id: string
@@ -81,35 +82,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
     
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      })
+      const response = await authService.login({ email, password })
 
-      const data = await response.json()
-
-      if (data.success && data.token && data.user) {
+      if (response.success && response.data) {
         const userObj = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.role,
-          organizationId: data.user.organization_id,
-          isActive: data.user.is_active
+          id: response.data.user.id,
+          email: response.data.user.email,
+          name: response.data.user.name,
+          role: response.data.user.role,
+          organizationId: response.data.user.organizationId,
+          isActive: response.data.user.isActive
         }
 
-        setToken(data.token)
+        setToken(response.data.token)
         setUser(userObj)
         
         // Store in localStorage and set cookie for middleware
-        localStorage.setItem('auth_token', data.token)
+        localStorage.setItem('auth_token', response.data.token)
         localStorage.setItem('auth_user', JSON.stringify(userObj))
         
         // Set cookie for middleware to read
-        document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
+        document.cookie = `auth_token=${response.data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
         
         setIsLoading(false)
         return { success: true }
@@ -117,7 +110,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
         return { 
           success: false, 
-          error: data.message || data.error || 'Login failed' 
+          error: response.message || 'Login failed' 
         }
       }
     } catch (error) {
@@ -133,35 +126,27 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true)
     
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ name, email, password, role }),
-      })
+      const response = await authService.register({ name, email, password, role })
 
-      const data = await response.json()
-
-      if (data.success && data.token && data.user) {
+      if (response.success && response.data) {
         const userObj = {
-          id: data.user.id,
-          email: data.user.email,
-          name: data.user.name,
-          role: data.user.role,
-          organizationId: data.user.organization_id,
-          isActive: data.user.is_active
+          id: response.data.user.id,
+          email: response.data.user.email,
+          name: response.data.user.name,
+          role: response.data.user.role,
+          organizationId: response.data.user.organizationId,
+          isActive: response.data.user.isActive
         }
 
-        setToken(data.token)
+        setToken(response.data.token)
         setUser(userObj)
         
         // Store in localStorage and set cookie for middleware
-        localStorage.setItem('auth_token', data.token)
+        localStorage.setItem('auth_token', response.data.token)
         localStorage.setItem('auth_user', JSON.stringify(userObj))
         
         // Set cookie for middleware to read
-        document.cookie = `auth_token=${data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
+        document.cookie = `auth_token=${response.data.token}; path=/; max-age=${60 * 60 * 24}; SameSite=Lax`
         
         setIsLoading(false)
         return { success: true }
@@ -169,7 +154,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setIsLoading(false)
         return { 
           success: false, 
-          error: data.message || data.error || 'Registration failed' 
+          error: response.message || 'Registration failed' 
         }
       }
     } catch (error) {
