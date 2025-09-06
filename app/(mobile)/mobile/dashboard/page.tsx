@@ -13,26 +13,21 @@ import {
 } from 'lucide-react'
 import { Shimmer } from '@/components/ui/shimmer'
 import Link from 'next/link'
-import { useAppointments } from '@/lib/hooks/use-appointments'
-import { useQueue, usePatients } from '@/lib/hooks/use-data-fetching'
-import { format } from 'date-fns'
+import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
 
 export default function MobileDashboardPage() {
-  const { appointments, isLoading } = useAppointments()
-  const { data: queueData, loading: queueLoading } = useQueue()
-  const { data: patientsData, loading: patientsLoading } = usePatients()
+  const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
 
   // Extract data with fallbacks
-  const queueStats = (queueData as any)?.stats || { total: 0, averageWaitTime: '0 min' }
-  const patientsCount = (patientsData as any)?.stats?.total || 0
-
-  // Get today's date in YYYY-MM-DD format
-  const today = format(new Date(), 'yyyy-MM-dd')
-  
-  // Get recent appointments (last 3)
-  const recentAppointments = appointments
-    .filter(appointment => appointment.date <= today)
-    .slice(0, 3)
+  const stats = dashboardData?.data?.stats || {
+    total_patients: 0,
+    todays_appointments: 0,
+    queue_length: 0,
+    average_wait_time: '0 min',
+    monthly_growth: '+0%',
+    revenue: '$0'
+  }
+  const recentAppointments = dashboardData?.data?.recent_appointments || []
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -47,14 +42,6 @@ export default function MobileDashboardPage() {
     }
   }
 
-  const formatTime = (time: string) => {
-    // Convert 24-hour format to 12-hour format
-    const [hours, minutes] = time.split(':')
-    const hour = parseInt(hours)
-    const ampm = hour >= 12 ? 'PM' : 'AM'
-    const displayHour = hour % 12 || 12
-    return `${displayHour}:${minutes} ${ampm}`
-  }
 
   return (
     <div className="space-y-4 pb-20">
@@ -80,37 +67,9 @@ export default function MobileDashboardPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Patients</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {patientsLoading ? '...' : patientsCount}
-                </p>
-              </div>
-              <Users className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-600">Today's Appointments</p>
-                <p className="text-2xl font-bold text-gray-900">
-                  {isLoading ? '...' : appointments.filter(a => a.date === today).length}
-                </p>
-              </div>
-              <Calendar className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
                 <p className="text-sm font-medium text-gray-600">Queue Length</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {queueLoading ? '...' : queueStats.total}
+                  {dashboardLoading ? '...' : stats.queue_length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -122,8 +81,36 @@ export default function MobileDashboardPage() {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
+                <p className="text-sm font-medium text-gray-600">Today's Appointments</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {dashboardLoading ? '...' : stats.todays_appointments}
+                </p>
+              </div>
+              <Calendar className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Total Patients</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {dashboardLoading ? '...' : stats.total_patients}
+                </p>
+              </div>
+              <Users className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
                 <p className="text-sm font-medium text-gray-600">Monthly Growth</p>
-                <p className="text-2xl font-bold text-gray-900">+12%</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.monthly_growth}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />
             </div>
@@ -139,7 +126,7 @@ export default function MobileDashboardPage() {
         </CardHeader>
         <CardContent>
           <div className="space-y-3">
-            {isLoading ? (
+            {dashboardLoading ? (
               <div className="space-y-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="p-3 bg-gray-50 rounded-lg">
@@ -156,7 +143,7 @@ export default function MobileDashboardPage() {
               recentAppointments.map((appointment) => (
                 <div key={appointment.id} className="p-3 bg-gray-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
-                    <p className="font-medium text-gray-900">{appointment.patientName}</p>
+                    <p className="font-medium text-gray-900">{appointment.patient_name}</p>
                     <Badge 
                       variant={getStatusColor(appointment.status)}
                       className="text-xs"
@@ -165,7 +152,7 @@ export default function MobileDashboardPage() {
                     </Badge>
                   </div>
                   <p className="text-sm text-gray-600 mb-1">{appointment.type.replace('_', ' ')}</p>
-                  <p className="text-sm font-medium text-gray-900">{formatTime(appointment.startTime)}</p>
+                  <p className="text-sm font-medium text-gray-900">{appointment.time}</p>
                 </div>
               ))
             ) : (

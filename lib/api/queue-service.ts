@@ -31,31 +31,31 @@ export class QueueService extends BaseApiService {
     limit?: number
     page?: number
   }): Promise<QueueResponse> {
-    return this.get<QueueResponse>('/api/v1/queue', params)
+    return this.get<QueueResponse>('/api/v1/queues', params)
   }
 
   async getQueueStats(organizationId?: string): Promise<QueueResponse> {
-    return this.get<QueueResponse>('/api/v1/queue/stats', { organizationId: organizationId ? organizationId : '' })
+    return this.get<QueueResponse>('/api/v1/queues/stats', { organizationId: organizationId ? organizationId : '' })
   }
 
   async addToQueue(appointmentId: string, organizationId: string): Promise<ApiResponse<PatientQueue>> {
-    return this.post<ApiResponse<PatientQueue>>('/api/v1/queue', { appointmentId, organizationId })
+    return this.post<ApiResponse<PatientQueue>>('/api/v1/queues', { appointmentId, organizationId })
   }
 
   async updateQueuePosition(queueId: string, position: number): Promise<ApiResponse<PatientQueue>> {
-    return this.put<ApiResponse<PatientQueue>>(`/api/v1/queue/${queueId}/position`, { position })
+    return this.put<ApiResponse<PatientQueue>>(`/api/v1/queues/${queueId}`, { position })
   }
 
   async updateQueueStatus(queueId: string, status: string): Promise<ApiResponse<PatientQueue>> {
-    return this.put<ApiResponse<PatientQueue>>(`/api/v1/queue/${queueId}/status`, { status })
+    return this.put<ApiResponse<PatientQueue>>(`/api/v1/queues/${queueId}`, { status })
   }
 
   async removeFromQueue(queueId: string): Promise<ApiResponse<{ message: string }>> {
-    return this.delete<ApiResponse<{ message: string }>>(`/api/v1/queue/${queueId}`)
+    return this.delete<ApiResponse<{ message: string }>>(`/api/v1/queues/${queueId}`)
   }
 
   async getQueuePosition(appointmentId: string): Promise<ApiResponse<PatientQueue>> {
-    return this.get<ApiResponse<PatientQueue>>(`/api/v1/queue/appointment/${appointmentId}`)
+    return this.get<ApiResponse<PatientQueue>>(`/api/v1/queues/appointment/${appointmentId}`)
   }
 }
 

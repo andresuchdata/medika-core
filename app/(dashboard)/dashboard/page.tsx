@@ -14,16 +14,27 @@ import {
   ArrowRight
 } from 'lucide-react'
 import Link from 'next/link'
-import { useQueue, usePatients } from '@/lib/hooks/use-data-fetching'
+import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
 import { Shimmer } from '@/components/ui/shimmer'
 
 export default function DashboardPage() {
-  const { data: queueData, loading: queueLoading } = useQueue()
-  const { data: patientsData, loading: patientsLoading } = usePatients()
+  const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
 
   // Extract data with fallbacks
-  const queueStats = (queueData as any)?.stats || { total: 0, waiting: 0, inProgress: 0, averageWaitTime: '0 min' }
-  const patientsCount = (patientsData as any)?.stats?.total || 0
+  const stats = dashboardData?.data?.stats || {
+    total_patients: 0,
+    todays_appointments: 0,
+    queue_length: 0,
+    average_wait_time: '0 min',
+    monthly_growth: '+0%',
+    revenue: '$0'
+  }
+  const recentAppointments = dashboardData?.data?.recent_appointments || []
+  const systemStatus = dashboardData?.data?.system_status || {
+    database: 'unknown',
+    file_storage: 'unknown',
+    notifications: 'unknown'
+  }
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -50,13 +61,13 @@ export default function DashboardPage() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {patientsLoading ? (
+            {dashboardLoading ? (
               <Shimmer width={60} height={32} className="rounded" />
             ) : (
-              <div className="text-xl sm:text-2xl font-bold">{patientsCount}</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats.total_patients}</div>
             )}
             <p className="text-xs text-muted-foreground">
-              <span className="text-green-600">+12%</span> from last month
+              <span className="text-green-600">{stats.monthly_growth}</span> from last month
             </p>
           </CardContent>
         </Card>
@@ -67,10 +78,10 @@ export default function DashboardPage() {
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {queueLoading ? (
+            {dashboardLoading ? (
               <Shimmer width={40} height={32} className="rounded" />
             ) : (
-              <div className="text-xl sm:text-2xl font-bold">24</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats.todays_appointments}</div>
             )}
             <p className="text-xs text-muted-foreground">
               <span className="text-blue-600">8</span> completed, <span className="text-orange-600">16</span> pending
@@ -84,13 +95,13 @@ export default function DashboardPage() {
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            {queueLoading ? (
+            {dashboardLoading ? (
               <Shimmer width={20} height={32} className="rounded" />
             ) : (
-              <div className="text-xl sm:text-2xl font-bold">{queueStats.total}</div>
+              <div className="text-xl sm:text-2xl font-bold">{stats.queue_length}</div>
             )}
             <p className="text-xs text-muted-foreground">
-              Avg wait: <span className="text-green-600">{queueStats.averageWaitTime}</span>
+              Avg wait: <span className="text-green-600">{stats.average_wait_time}</span>
             </p>
           </CardContent>
         </Card>
@@ -101,7 +112,7 @@ export default function DashboardPage() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-xl sm:text-2xl font-bold">$12,450</div>
+            <div className="text-xl sm:text-2xl font-bold">{stats.revenue}</div>
             <p className="text-xs text-muted-foreground">
               <span className="text-green-600">+8.2%</span> from last month
             </p>
@@ -153,30 +164,45 @@ export default function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-3 sm:space-y-4">
-              {[
-                { patient: 'John Doe', time: '09:00 AM', status: 'completed', type: 'Consultation' },
-                { patient: 'Jane Smith', time: '10:30 AM', status: 'in_progress', type: 'Follow-up' },
-                { patient: 'Mike Johnson', time: '02:00 PM', status: 'pending', type: 'Routine Check' },
-              ].map((appointment, index) => (
-                <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="min-w-0 flex-1">
-                    <p className="font-medium text-gray-900 truncate">{appointment.patient}</p>
-                    <p className="text-sm text-gray-600 truncate">{appointment.type}</p>
-                  </div>
-                  <div className="text-right ml-3">
-                    <p className="text-sm font-medium text-gray-900">{appointment.time}</p>
-                    <Badge 
-                      variant={
-                        appointment.status === 'completed' ? 'default' :
-                        appointment.status === 'in_progress' ? 'secondary' : 'outline'
-                      }
-                      className="text-xs"
-                    >
-                      {appointment.status.replace('_', ' ')}
-                    </Badge>
-                  </div>
+              {dashboardLoading ? (
+                <div className="space-y-3">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="p-3 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <Shimmer width="40%" height={16} className="rounded" />
+                        <Shimmer width={60} height={20} className="rounded" />
+                      </div>
+                      <Shimmer width="60%" height={14} className="rounded mb-1" />
+                      <Shimmer width="30%" height={14} className="rounded" />
+                    </div>
+                  ))}
                 </div>
-              ))}
+              ) : recentAppointments.length > 0 ? (
+                recentAppointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-gray-900 truncate">{appointment.patient_name}</p>
+                      <p className="text-sm text-gray-600 truncate">{appointment.type}</p>
+                    </div>
+                    <div className="text-right ml-3">
+                      <p className="text-sm font-medium text-gray-900">{appointment.time}</p>
+                      <Badge 
+                        variant={
+                          appointment.status === 'completed' ? 'default' :
+                          appointment.status === 'in_progress' ? 'secondary' : 'outline'
+                        }
+                        className="text-xs"
+                      >
+                        {appointment.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-4 text-gray-500">
+                  <p>No recent appointments</p>
+                </div>
+              )}
               <Link href="/dashboard/appointments">
                 <Button variant="ghost" className="w-full">
                   View All Appointments
@@ -197,16 +223,22 @@ export default function DashboardPage() {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Database: Operational</span>
+              <div className={`w-3 h-3 rounded-full ${
+                systemStatus.database === 'operational' ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className="text-sm">Database: {systemStatus.database}</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm">File Storage: Operational</span>
+              <div className={`w-3 h-3 rounded-full ${
+                systemStatus.file_storage === 'operational' ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className="text-sm">File Storage: {systemStatus.file_storage}</span>
             </div>
             <div className="flex items-center space-x-3">
-              <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-              <span className="text-sm">Notifications: Operational</span>
+              <div className={`w-3 h-3 rounded-full ${
+                systemStatus.notifications === 'operational' ? 'bg-green-500' : 'bg-red-500'
+              }`}></div>
+              <span className="text-sm">Notifications: {systemStatus.notifications}</span>
             </div>
           </div>
         </CardContent>

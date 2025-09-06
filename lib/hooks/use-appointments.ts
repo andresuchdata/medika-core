@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { AppointmentWithNames } from '@/types'
 import { appointmentService } from '@/lib/api/appointment-service'
 
@@ -7,7 +7,6 @@ interface UseAppointmentsOptions {
   status?: string
   doctorId?: string
   patientId?: string
-  autoFetch?: boolean
 }
 
 interface UseAppointmentsReturn {
@@ -19,11 +18,12 @@ interface UseAppointmentsReturn {
 }
 
 export function useAppointments(options: UseAppointmentsOptions = {}): UseAppointmentsReturn {
-  const { date, status, doctorId, patientId, autoFetch = true } = options
+  const { date, status, doctorId, patientId } = options
   
   const [appointments, setAppointments] = useState<AppointmentWithNames[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const hasFetched = useRef(false)
 
   const fetchAppointments = async () => {
     setIsLoading(true)
@@ -76,11 +76,13 @@ export function useAppointments(options: UseAppointmentsOptions = {}): UseAppoin
     }
   }
 
+  // Auto-fetch on mount and when params change (only once per param set)
   useEffect(() => {
-    if (autoFetch) {
+    if (!hasFetched.current) {
+      hasFetched.current = true
       fetchAppointments()
     }
-  }, [date, status, doctorId, patientId, autoFetch])
+  }, [date, status, doctorId, patientId])
 
   return {
     appointments,

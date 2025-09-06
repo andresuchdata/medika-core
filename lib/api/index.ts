@@ -7,6 +7,7 @@ export { doctorService, DoctorService } from './doctor-service'
 export { organizationService, OrganizationService } from './organization-service'
 export { queueService, QueueService } from './queue-service'
 export { appointmentService, AppointmentService } from './appointment-service'
+export { dashboardService } from './dashboard-service'
 
 // Types from services
 export type { 
@@ -28,3 +29,11 @@ export type {
   AppointmentResponse, 
   AppointmentData 
 } from './appointment-service'
+export type { 
+  DashboardSummaryResponse,
+  DashboardSummaryData,
+  DashboardStats,
+  RecentAppointment,
+  SystemStatus,
+  DashboardSummaryParams
+} from './dashboard-service'
