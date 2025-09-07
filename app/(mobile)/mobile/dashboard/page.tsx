@@ -15,11 +15,13 @@ import {
 import { Shimmer } from '@/components/ui/shimmer'
 import Link from 'next/link'
 import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
-import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
+import { useNotificationContext } from '@/lib/context/notification-context'
+import { useAuth } from '@/lib/stores/auth-store'
 
 export default function MobileDashboardPage() {
   const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
-  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
+  const { unreadCount, isLoading: unreadLoading } = useNotificationContext()
+  const { user } = useAuth()
 
   // Extract data with fallbacks
   const stats = dashboardData?.data?.stats || {
@@ -31,7 +33,6 @@ export default function MobileDashboardPage() {
     revenue: '$0'
   }
   const recentAppointments = dashboardData?.data?.recent_appointments || []
-  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -52,7 +53,7 @@ export default function MobileDashboardPage() {
       {/* Page header */}
       <div className="text-center mb-6">
         <h1 className="text-2xl font-bold text-gray-900 mb-2">Dashboard</h1>
-        <p className="text-gray-600">Welcome back, Dr. Sarah Johnson</p>
+        <p className="text-gray-600">Welcome back, {user?.name || 'User'}</p>
       </div>
 
       {/* Quick action button */}

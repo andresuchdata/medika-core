@@ -16,12 +16,14 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
-import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
+import { useNotificationContext } from '@/lib/context/notification-context'
+import { useAuth } from '@/lib/auth/auth-context'
 import { Shimmer } from '@/components/ui/shimmer'
 
 export default function DashboardPage() {
   const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
-  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
+  const { unreadCount, isLoading: unreadLoading } = useNotificationContext()
+  const { user } = useAuth()
 
   // Extract data with fallbacks
   const stats = dashboardData?.data?.stats || {
@@ -38,7 +40,6 @@ export default function DashboardPage() {
     file_storage: 'unknown',
     notifications: 'unknown'
   }
-  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -46,7 +47,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="text-gray-600">Welcome back, Dr. Sarah Johnson</p>
+          <p className="text-gray-600">Welcome back, {user?.name || 'User'}</p>
         </div>
         <div className="flex space-x-3">
           <Button className="w-full sm:w-auto">

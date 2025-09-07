@@ -4,8 +4,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Settings, User, Bell, Shield, Database } from 'lucide-react'
+import { useAuth } from '@/lib/auth/auth-context'
 
 export default function SettingsPage() {
+  const { user } = useAuth()
+  
   return (
     <div className="space-y-4 sm:space-y-6">
       {/* Page header */}
@@ -27,7 +30,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" defaultValue="Dr. Sarah Johnson" />
+              <Input id="name" defaultValue={user?.name || ''} />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>

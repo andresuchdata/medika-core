@@ -14,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
-import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
+import { useNotificationContext } from '@/lib/context/notification-context'
 
 interface HeaderProps {
   onSidebarToggle?: () => void
@@ -23,10 +23,7 @@ interface HeaderProps {
 
 export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
   const { user, logout } = useAuth()
-  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
-  
-  // Get unread notification count with fallback
-  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
+  const { unreadCount, isLoading: unreadLoading } = useNotificationContext()
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">

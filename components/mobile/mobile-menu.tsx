@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils/cn'
 import { Button } from '@/components/ui/button'
+import { useAuth } from '@/lib/stores/auth-store'
 import { 
   Home, 
   Users, 
@@ -39,6 +40,7 @@ interface MobileMenuProps {
 
 export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
   const pathname = usePathname()
+  const { user } = useAuth()
   const [touchStart, setTouchStart] = useState<number | null>(null)
   const [touchEnd, setTouchEnd] = useState<number | null>(null)
 
@@ -145,8 +147,8 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               <User className="h-5 w-5 text-gray-600" />
             </div>
             <div>
-              <p className="text-sm font-medium text-gray-900">Dr. Sarah Johnson</p>
-              <p className="text-xs text-gray-500">admin@medika.com</p>
+              <p className="text-sm font-medium text-gray-900">{user?.name || 'User'}</p>
+              <p className="text-xs text-gray-500">{user?.email || 'user@example.com'}</p>
             </div>
           </div>
           <Button variant="outline" className="w-full" size="sm">

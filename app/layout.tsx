@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { RouteGuard } from "@/components/route-guard";
 import { UIProvider } from "@/lib/context/ui-context";
 import { AuthProvider } from "@/lib/auth/auth-context";
+import { NotificationProvider } from "@/lib/context/notification-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -34,10 +35,12 @@ export default function RootLayout({
       >
         <AuthProvider>
           <UIProvider>
-            <RouteGuard>
-              {children}
-            </RouteGuard>
-            <Toaster />
+            <NotificationProvider>
+              <RouteGuard>
+                {children}
+              </RouteGuard>
+              <Toaster />
+            </NotificationProvider>
           </UIProvider>
         </AuthProvider>
       </body>

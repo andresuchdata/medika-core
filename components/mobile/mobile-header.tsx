@@ -18,7 +18,7 @@ import { useUI } from '@/lib/context/ui-context'
 import { useAuth } from '@/lib/stores/auth-store'
 import { getUserInitials, formatUserRole } from '@/lib/utils/user'
 import { useRouter } from 'next/navigation'
-import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
+import { useNotificationContext } from '@/lib/context/notification-context'
 
 
 export function MobileHeader() {
@@ -29,10 +29,7 @@ export function MobileHeader() {
 
   const router = useRouter()
   const { user, logout } = useAuth()
-  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
-  
-  // Get unread notification count with fallback
-  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
+  const { unreadCount, isLoading: unreadLoading } = useNotificationContext()
 
   const handleSearchToggle = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
