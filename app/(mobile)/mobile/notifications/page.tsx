@@ -1,9 +1,54 @@
+'use client'
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Bell, Calendar, User, Stethoscope, Clock, CheckCircle, AlertCircle } from 'lucide-react'
+import { MobileNotificationsLoadingState } from '@/components/ui/loading-states'
+import { useNotifications } from '@/lib/hooks/use-notifications'
 
 export default function MobileNotificationsPage() {
+  const { data: notificationsData, isLoading, error, refetch } = useNotifications({
+    limit: 20,
+    order_by: 'created_at',
+    order: 'desc'
+  })
+
+  if (isLoading) {
+    return <MobileNotificationsLoadingState />
+  }
+
+  if (error) {
+    const isAuthError = error.message.includes('login') || error.message.includes('Authentication')
+    return (
+      <div className="space-y-4 pb-20">
+        <div className="text-center mb-6">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Notifications</h1>
+          <p className="text-gray-600">Stay updated with important alerts</p>
+        </div>
+        
+        <Card>
+          <CardContent className="p-4 text-center">
+            <p className="text-red-600 mb-4">
+              {isAuthError ? 'Please login to view notifications' : `Error loading notifications: ${error.message}`}
+            </p>
+            {isAuthError ? (
+              <Button onClick={() => window.location.href = '/login'} variant="outline">
+                Go to Login
+              </Button>
+            ) : (
+              <Button onClick={() => refetch()} variant="outline">
+                Try Again
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
+  const notifications = notificationsData?.data || []
+
   return (
     <div className="space-y-4 pb-20">
       {/* Page header */}
@@ -31,48 +76,7 @@ export default function MobileNotificationsPage() {
 
       {/* Notifications list */}
       <div className="space-y-3">
-        {[
-          { 
-            title: 'New Appointment Request', 
-            message: 'John Doe requested an appointment for tomorrow at 2:00 PM',
-            type: 'appointment',
-            time: '2 minutes ago',
-            isRead: false,
-            priority: 'high'
-          },
-          { 
-            title: 'Patient Check-in', 
-            message: 'Jane Smith has checked in for her 10:30 AM appointment',
-            type: 'checkin',
-            time: '15 minutes ago',
-            isRead: false,
-            priority: 'medium'
-          },
-          { 
-            title: 'Lab Results Ready',
-            message: 'Blood test results for Mike Johnson are now available',
-            type: 'lab',
-            time: '1 hour ago',
-            isRead: true,
-            priority: 'low'
-          },
-          { 
-            title: 'Emergency Alert', 
-            message: 'Emergency patient arrived - Dr. Sarah Johnson needed in ER',
-            type: 'emergency',
-            time: '2 hours ago',
-            isRead: true,
-            priority: 'critical'
-          },
-          { 
-            title: 'Schedule Update', 
-            message: 'Your 3:00 PM appointment has been rescheduled to 4:00 PM',
-            type: 'schedule',
-            time: '3 hours ago',
-            isRead: true,
-            priority: 'medium'
-          },
-        ].map((notification, index) => (
+        {notifications.map((notification, index) => (
           <Card key={index} className={notification.isRead ? 'opacity-75' : ''}>
             <CardContent className="p-4">
               <div className="space-y-3">
@@ -104,7 +108,7 @@ export default function MobileNotificationsPage() {
                       <p className="text-sm text-gray-600">{notification.message}</p>
                     </div>
                   </div>
-                  {!notification.isRead && (
+                  {!notification.is_read && (
                     <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
                   )}
                 </div>
@@ -113,7 +117,7 @@ export default function MobileNotificationsPage() {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2 text-sm text-gray-500">
                     <Clock className="h-4 w-4" />
-                    <span>{notification.time}</span>
+                    <span>{new Date(notification.created_at).toLocaleString()}</span>
                   </div>
                   <Badge variant={
                     notification.priority === 'critical' ? 'destructive' :
@@ -130,7 +134,7 @@ export default function MobileNotificationsPage() {
                     View Details
                   </Button>
                   <Button variant="outline" size="sm" className="flex-1">
-                    {notification.isRead ? 'Mark Unread' : 'Mark Read'}
+                    {notification.is_read ? 'Mark Unread' : 'Mark Read'}
                   </Button>
                 </div>
               </div>

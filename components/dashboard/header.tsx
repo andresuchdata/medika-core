@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -15,6 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
+import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
 
 interface HeaderProps {
   onSidebarToggle?: () => void
@@ -22,8 +22,11 @@ interface HeaderProps {
 }
 
 export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
-  const [notifications] = useState(3) // Mock notification count
   const { user, logout } = useAuth()
+  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
+  
+  // Get unread notification count with fallback
+  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   return (
     <header className="sticky top-0 z-30 bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4">
@@ -61,16 +64,23 @@ export function Header({ onSidebarToggle, sidebarOpen }: HeaderProps) {
         {/* Right side */}
         <div className="flex items-center gap-2 sm:gap-4">
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
-            <Bell className="h-5 w-5" />
-            {notifications > 0 && (
-              <Badge 
-                variant="destructive" 
-                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-              >
-                {notifications}
-              </Badge>
-            )}
+          <Button variant="ghost" size="icon" className="relative" asChild>
+            <Link href="/dashboard/notifications">
+              <Bell className="h-5 w-5" />
+              {!unreadLoading && unreadCount > 0 && (
+                <Badge 
+                  variant="destructive" 
+                  className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                >
+                  {unreadCount > 9 ? '9+' : unreadCount}
+                </Badge>
+              )}
+              {unreadLoading && (
+                <div className="absolute -top-1 -right-1">
+                  <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                </div>
+              )}
+            </Link>
           </Button>
 
           {/* User menu */}

@@ -11,14 +11,17 @@ import {
   UserCheck, 
   Stethoscope,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Bell
 } from 'lucide-react'
 import Link from 'next/link'
 import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
+import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
 import { Shimmer } from '@/components/ui/shimmer'
 
 export default function DashboardPage() {
   const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
+  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
 
   // Extract data with fallbacks
   const stats = dashboardData?.data?.stats || {
@@ -35,6 +38,7 @@ export default function DashboardPage() {
     file_storage: 'unknown',
     notifications: 'unknown'
   }
+  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   return (
     <div className="space-y-4 sm:space-y-6">
@@ -151,6 +155,22 @@ export default function DashboardPage() {
               <Button variant="outline" className="w-full justify-start">
                 <Stethoscope className="mr-2 h-4 w-4" />
                 Medical Records
+              </Button>
+            </Link>
+            <Link href="/dashboard/notifications">
+              <Button variant="outline" className="w-full justify-start relative">
+                <Bell className="mr-2 h-4 w-4" />
+                Notifications
+                {!unreadLoading && unreadCount > 0 && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </div>
+                )}
+                {unreadLoading && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                  </div>
+                )}
               </Button>
             </Link>
           </CardContent>

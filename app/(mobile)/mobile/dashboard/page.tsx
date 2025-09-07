@@ -9,14 +9,17 @@ import {
   Clock, 
   TrendingUp, 
   Plus,
-  ArrowRight
+  ArrowRight,
+  Bell
 } from 'lucide-react'
 import { Shimmer } from '@/components/ui/shimmer'
 import Link from 'next/link'
 import { useDashboardSummary } from '@/lib/hooks/use-dashboard-summary'
+import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
 
 export default function MobileDashboardPage() {
   const { data: dashboardData, loading: dashboardLoading } = useDashboardSummary()
+  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
 
   // Extract data with fallbacks
   const stats = dashboardData?.data?.stats || {
@@ -28,6 +31,7 @@ export default function MobileDashboardPage() {
     revenue: '$0'
   }
   const recentAppointments = dashboardData?.data?.recent_appointments || []
+  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -113,6 +117,27 @@ export default function MobileDashboardPage() {
                 <p className="text-2xl font-bold text-gray-900">{stats.monthly_growth}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Unread Notifications</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {unreadLoading ? '...' : unreadCount}
+                </p>
+              </div>
+              <div className="relative">
+                <Bell className="h-8 w-8 text-red-600" />
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </div>
+                )}
+              </div>
             </div>
           </CardContent>
         </Card>

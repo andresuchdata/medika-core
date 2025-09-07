@@ -17,21 +17,32 @@ import { Bell, Search, User, LogOut, Settings } from 'lucide-react'
 import { useUI } from '@/lib/context/ui-context'
 import { useAuth } from '@/lib/stores/auth-store'
 import { getUserInitials, formatUserRole } from '@/lib/utils/user'
+import { useRouter } from 'next/navigation'
+import { useUnreadNotificationCount } from '@/lib/hooks/use-notifications'
+
 
 export function MobileHeader() {
   const { 
-    state: { searchOpen, notificationsOpen }, 
-    toggleSearch, 
-    toggleNotifications 
+    state: { searchOpen }, 
+    toggleSearch,
   } = useUI()
-  
+
+  const router = useRouter()
   const { user, logout } = useAuth()
+  const { data: unreadData, isLoading: unreadLoading, error: unreadError } = useUnreadNotificationCount()
+  
+  // Get unread notification count with fallback
+  const unreadCount = unreadError ? 0 : (unreadData?.data?.unread_count || 0)
 
   const handleSearchToggle = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
     toggleSearch()
   }, [toggleSearch])
+
+  const handleClickNotifications = useCallback((e: React.MouseEvent) => {
+    router.push('/mobile/notifications')
+  }, [router])
 
 
   return (
@@ -57,14 +68,21 @@ export function MobileHeader() {
           </Button>
 
           {/* Notifications */}
-          <Button variant="ghost" size="icon" className="relative">
+          <Button variant="ghost" size="icon" className="relative" onClick={handleClickNotifications}>
             <Bell className="h-5 w-5" />
-            <Badge 
-              variant="destructive" 
-              className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-            >
-              3
-            </Badge>
+            {!unreadLoading && unreadCount > 0 && (
+              <Badge
+                variant="destructive" 
+                className="absolute -top-1 -right-1 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              >
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </Badge>
+            )}
+            {unreadLoading && (
+              <div className="absolute -top-1 -right-1">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+              </div>
+            )}
           </Button>
 
           {/* User menu */}

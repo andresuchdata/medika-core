@@ -9,8 +9,8 @@ export default function HomePage() {
 
   useEffect(() => {
     // Check if user is already logged in
-    const token = localStorage.getItem('token')
-    const user = localStorage.getItem('user')
+    const token = localStorage.getItem('auth_token')
+    const user = localStorage.getItem('auth_user')
 
     if (token && user) {
       // User is logged in, redirect to dashboard
