@@ -7,10 +7,12 @@ import { Calendar, Plus, Clock, User, Stethoscope } from 'lucide-react'
 import Link from 'next/link'
 import { useAppointments } from '@/lib/hooks/use-appointments'
 import { useQueue, usePatients } from '@/lib/hooks/use-data-fetching'
+import { useAuth } from '@/lib/auth/auth-context'
 import { format } from 'date-fns'
 import { AppointmentsLoadingState } from '@/components/ui/loading-states'
 
 export default function AppointmentsPage() {
+  const { user } = useAuth()
   const { appointments, isLoading, error } = useAppointments()
   const { data: queueData, loading: queueLoading } = useQueue()
   const { data: patientsData, loading: patientsLoading } = usePatients()
@@ -22,14 +24,26 @@ export default function AppointmentsPage() {
   // Get today's date in YYYY-MM-DD format
   const today = format(new Date(), 'yyyy-MM-dd')
   
-  // Filter appointments for today and upcoming
-  const todaysAppointments = appointments.filter(
-    appointment => appointment.date === today
-  )
+  // Filter appointments based on user role
+  let todaysAppointments, upcomingAppointments
   
-  const upcomingAppointments = appointments.filter(
-    appointment => appointment.date > today
-  )
+  if (user?.role === 'patient') {
+    // For patients, show only their appointments
+    todaysAppointments = appointments.filter(
+      appointment => appointment.date === today && appointment.patientId === user.id
+    )
+    upcomingAppointments = appointments.filter(
+      appointment => appointment.date > today && appointment.patientId === user.id
+    )
+  } else {
+    // For staff, show all appointments
+    todaysAppointments = appointments.filter(
+      appointment => appointment.date === today
+    )
+    upcomingAppointments = appointments.filter(
+      appointment => appointment.date > today
+    )
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -92,15 +106,24 @@ export default function AppointmentsPage() {
       {/* Page header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Appointments</h1>
-          <p className="text-gray-600">Schedule and manage patient appointments</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+            {user?.role === 'patient' ? 'Your Appointments' : 'Appointments'}
+          </h1>
+          <p className="text-gray-600">
+            {user?.role === 'patient' 
+              ? 'View and manage your scheduled appointments' 
+              : 'Schedule and manage patient appointments'
+            }
+          </p>
         </div>
-        <Link href="/dashboard/appointments/new">
-          <Button className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            New Appointment
-          </Button>
-        </Link>
+        {user?.role !== 'patient' && (
+          <Link href="/dashboard/appointments/new">
+            <Button className="w-full sm:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              New Appointment
+            </Button>
+          </Link>
+        )}
       </div>
 
       {/* Today's appointments */}
@@ -123,8 +146,17 @@ export default function AppointmentsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="text-right">
-                      <p className="font-medium">{appointment.patientName}</p>
-                      <p className="text-sm text-gray-600">{appointment.doctorName}</p>
+                      {user?.role === 'patient' ? (
+                        <>
+                          <p className="font-medium">{appointment.doctorName}</p>
+                          <p className="text-sm text-gray-600">{appointment.type.replace('_', ' ')}</p>
+                        </>
+                      ) : (
+                        <>
+                          <p className="font-medium">{appointment.patientName}</p>
+                          <p className="text-sm text-gray-600">{appointment.doctorName}</p>
+                        </>
+                      )}
                     </div>
                     <Badge variant={getStatusColor(appointment.status)}>
                       {appointment.status}
@@ -161,8 +193,17 @@ export default function AppointmentsPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{appointment.patientName}</p>
-                    <p className="text-sm text-gray-600">{appointment.doctorName}</p>
+                    {user?.role === 'patient' ? (
+                      <>
+                        <p className="font-medium">{appointment.doctorName}</p>
+                        <p className="text-sm text-gray-600">{appointment.type.replace('_', ' ')}</p>
+                      </>
+                    ) : (
+                      <>
+                        <p className="font-medium">{appointment.patientName}</p>
+                        <p className="text-sm text-gray-600">{appointment.doctorName}</p>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

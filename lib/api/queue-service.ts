@@ -57,6 +57,10 @@ export class QueueService extends BaseApiService {
   async getQueuePosition(appointmentId: string): Promise<ApiResponse<PatientQueue>> {
     return this.get<ApiResponse<PatientQueue>>(`/api/v1/queues/appointment/${appointmentId}`)
   }
+
+  async getPatientQueue(patientId: string): Promise<ApiResponse<any>> {
+    return this.get<ApiResponse<any>>(`/api/v1/queues/patient/${patientId}`)
+  }
 }
 
 // Export singleton instance

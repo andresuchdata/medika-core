@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { AppointmentWithNames } from '@/types'
 import { appointmentService } from '@/lib/api/appointment-service'
+import { useAuth } from '@/lib/stores/auth-store'
 
 interface UseAppointmentsOptions {
   date?: string
@@ -19,6 +20,7 @@ interface UseAppointmentsReturn {
 
 export function useAppointments(options: UseAppointmentsOptions = {}): UseAppointmentsReturn {
   const { date, status, doctorId, patientId } = options
+  const { user } = useAuth()
   
   const [appointments, setAppointments] = useState<AppointmentWithNames[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -35,6 +37,16 @@ export function useAppointments(options: UseAppointmentsOptions = {}): UseAppoin
       if (status) params.status = status
       if (doctorId) params.doctorId = doctorId
       if (patientId) params.patientId = patientId
+      
+      // Add organization ID from user context (for staff members)
+      // For patients, we'll filter by patientId instead
+      if (user?.organizationId) {
+        params.organizationId = user.organizationId
+      } else if (user?.role === 'patient' && user?.id && !patientId) {
+        // For patients without organization ID, filter by their patient ID
+        // Only if no specific patientId is provided in options
+        params.patientId = user.id
+      }
 
       const response = await appointmentService.getAppointments(params)
 
@@ -82,7 +94,7 @@ export function useAppointments(options: UseAppointmentsOptions = {}): UseAppoin
       hasFetched.current = true
       fetchAppointments()
     }
-  }, [date, status, doctorId, patientId])
+  }, [date, status, doctorId, patientId, user?.organizationId])
 
   return {
     appointments,

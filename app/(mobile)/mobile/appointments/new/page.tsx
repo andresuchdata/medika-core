@@ -15,6 +15,10 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useAppointmentFormStore } from '@/lib/stores'
+import { useAppointments } from '@/lib/hooks/use-appointments'
+import { useDoctors, usePatients } from '@/lib/hooks/use-data-fetching'
+import { useAuth } from '@/lib/stores/auth-store'
+import { toast } from 'sonner'
 
 const appointmentSchema = z.object({
   patient: z.string().min(1, 'Patient is required'),
@@ -37,6 +41,11 @@ export default function MobileNewAppointmentPage() {
     resetNewAppointmentForm: resetForm, 
     isFormDirty 
   } = useAppointmentFormStore()
+  const { createAppointment } = useAppointments()
+  const { data: doctorsData, loading: doctorsLoading } = useDoctors()
+  const { data: patientsData, loading: patientsLoading } = usePatients()
+  const { user } = useAuth()
+  console.log('user --- ', user)
   
   const form = useForm<AppointmentFormValues>({
     resolver: zodResolver(appointmentSchema),
@@ -72,16 +81,54 @@ export default function MobileNewAppointmentPage() {
     }
   }, [newPatientAdded, router])
 
-  const onSubmit = (data: AppointmentFormValues) => {
-    // TODO: handle submit
-    console.log('Appointment form submit', data)
+  const onSubmit = async (data: AppointmentFormValues) => {
+    // Get organization ID from user or selected doctor
+    let organizationId = user?.organizationId
     
-    // Reset form data in context after successful submission
-    resetForm()
+    // If user doesn't have organization ID, get it from the selected doctor
+    if (!organizationId && data.doctor) {
+      const selectedDoctor = doctorsData?.data?.doctors?.find(doctor => doctor.id === data.doctor)
+      organizationId = selectedDoctor?.organizationId
+    }
     
-    // Show success message or redirect
-    // For now, just reset the form
-    form.reset()
+    // Prevent submission if no organization ID is available
+    if (!organizationId) {
+      toast.error('Organization ID is required. Please select a doctor or log in again.')
+      return
+    }
+
+    try {
+      // Convert form data to API format
+      const appointmentData = {
+        patientId: data.patient,
+        doctorId: data.doctor,
+        organizationId: organizationId,
+        date: data.date,
+        startTime: data.time,
+        endTime: data.time, // For now, same as start time
+        duration: 30, // Default 30 minutes
+        type: data.type as any, // Type assertion for now
+        notes: data.notes || undefined,
+      }
+
+      const result = await createAppointment(appointmentData)
+      
+      if (result.success) {
+        toast.success('Appointment created successfully!')
+        
+        // Reset form data in context after successful submission
+        resetForm()
+        form.reset()
+        
+        // Redirect to appointments list
+        router.push('/mobile/appointments')
+      } else {
+        toast.error(result.error || 'Failed to create appointment')
+      }
+    } catch (error) {
+      console.error('Error creating appointment:', error)
+      toast.error('An unexpected error occurred')
+    }
   }
   return (
     <div className="space-y-6">
@@ -148,14 +195,17 @@ export default function MobileNewAppointmentPage() {
                             onAddNew={() => router.push('/mobile/patients/new?from=appointment')}
                             addNewLabel="New Patient"
                           >
-                            <SelectItem value="john-doe">John Doe</SelectItem>
-                            <SelectItem value="jane-smith">Jane Smith</SelectItem>
-                            <SelectItem value="bob-johnson">Bob Johnson</SelectItem>
-                            <SelectItem value="alice-brown">Alice Brown</SelectItem>
-                            <SelectItem value="charlie-davis">Charlie Davis</SelectItem>
-                            <SelectItem value="diana-evans">Diana Evans</SelectItem>
-                            <SelectItem value="frank-garcia">Frank Garcia</SelectItem>
-                            <SelectItem value="grace-harris">Grace Harris</SelectItem>
+                            {patientsLoading ? (
+                              <SelectItem value="loading" disabled>Loading patients...</SelectItem>
+                            ) : patientsData?.data?.patients?.length ? (
+                              patientsData.data.patients.map((patient) => (
+                                <SelectItem key={patient.id} value={patient.id}>
+                                  {patient.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-patients" disabled>No patients found</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -178,14 +228,17 @@ export default function MobileNewAppointmentPage() {
                             <SelectValue placeholder="Select doctor" />
                           </SelectTrigger>
                           <SelectContent searchable>
-                            <SelectItem value="dr-sarah">Dr. Sarah Johnson</SelectItem>
-                            <SelectItem value="dr-mike">Dr. Mike Wilson</SelectItem>
-                            <SelectItem value="dr-emily">Dr. Emily Chen</SelectItem>
-                            <SelectItem value="dr-david">Dr. David Rodriguez</SelectItem>
-                            <SelectItem value="dr-lisa">Dr. Lisa Thompson</SelectItem>
-                            <SelectItem value="dr-james">Dr. James Anderson</SelectItem>
-                            <SelectItem value="dr-maria">Dr. Maria Garcia</SelectItem>
-                            <SelectItem value="dr-robert">Dr. Robert Lee</SelectItem>
+                            {doctorsLoading ? (
+                              <SelectItem value="loading" disabled>Loading doctors...</SelectItem>
+                            ) : doctorsData?.data?.doctors?.length ? (
+                              doctorsData.data.doctors.map((doctor) => (
+                                <SelectItem key={doctor.id} value={doctor.id}>
+                                  {doctor.name}
+                                </SelectItem>
+                              ))
+                            ) : (
+                              <SelectItem value="no-doctors" disabled>No doctors found</SelectItem>
+                            )}
                           </SelectContent>
                         </Select>
                       </FormControl>
@@ -238,8 +291,8 @@ export default function MobileNewAppointmentPage() {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="consultation">Consultation</SelectItem>
-                            <SelectItem value="follow-up">Follow-up</SelectItem>
-                            <SelectItem value="routine-check">Routine Check</SelectItem>
+                            <SelectItem value="follow_up">Follow-up</SelectItem>
+                            <SelectItem value="routine_checkup">Routine Check</SelectItem>
                             <SelectItem value="emergency">Emergency</SelectItem>
                           </SelectContent>
                         </Select>

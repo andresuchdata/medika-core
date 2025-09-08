@@ -7,22 +7,36 @@ import { Calendar, Plus, Clock, User } from 'lucide-react'
 import { Shimmer } from '@/components/ui/shimmer'
 import Link from 'next/link'
 import { useAppointments } from '@/lib/hooks/use-appointments'
+import { useAuth } from '@/lib/auth/auth-context'
 import { format } from 'date-fns'
 
 export default function MobileAppointmentsPage() {
+  const { user } = useAuth()
   const { appointments, isLoading, error } = useAppointments()
 
   // Get today's date in YYYY-MM-DD format
   const today = format(new Date(), 'yyyy-MM-dd')
   
-  // Filter appointments for today and upcoming
-  const todaysAppointments = appointments.filter(
-    appointment => appointment.date === today
-  )
+  // Filter appointments based on user role
+  let todaysAppointments, upcomingAppointments
   
-  const upcomingAppointments = appointments.filter(
-    appointment => appointment.date > today
-  ).slice(0, 3) // Show only next 3 upcoming appointments
+  if (user?.role === 'patient') {
+    // For patients, show only their appointments
+    todaysAppointments = appointments.filter(
+      appointment => appointment.date === today && appointment.patientId === user.id
+    )
+    upcomingAppointments = appointments.filter(
+      appointment => appointment.date > today && appointment.patientId === user.id
+    ).slice(0, 3) // Show only next 3 upcoming appointments
+  } else {
+    // For staff, show all appointments
+    todaysAppointments = appointments.filter(
+      appointment => appointment.date === today
+    )
+    upcomingAppointments = appointments.filter(
+      appointment => appointment.date > today
+    ).slice(0, 3) // Show only next 3 upcoming appointments
+  }
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -87,19 +101,25 @@ export default function MobileAppointmentsPage() {
     <div className="space-y-4 pb-20">
       {/* Page header */}
       <div className="text-center mb-6">
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Appointments</h1>
-        <p className="text-gray-600">Manage your schedule</p>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+          {user?.role === 'patient' ? 'Your Appointments' : 'Appointments'}
+        </h1>
+        <p className="text-gray-600">
+          {user?.role === 'patient' ? 'View your scheduled appointments' : 'Manage your schedule'}
+        </p>
       </div>
 
-      {/* Add new appointment button */}
-      <div className="mb-6">
-        <Link href="/mobile/appointments/new">
-          <Button className="w-full h-12 text-base">
-            <Plus className="mr-2 h-5 w-5" />
-            New Appointment
-          </Button>
-        </Link>
-      </div>
+      {/* Add new appointment button - only for staff */}
+      {user?.role !== 'patient' && (
+        <div className="mb-6">
+          <Link href="/mobile/appointments/new">
+            <Button className="w-full h-12 text-base">
+              <Plus className="mr-2 h-5 w-5" />
+              New Appointment
+            </Button>
+          </Link>
+        </div>
+      )}
 
       {/* Today's appointments */}
       <Card>
@@ -135,13 +155,27 @@ export default function MobileAppointmentsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
-                  <Badge 
-                    variant={getStatusColor(appointment.status)}
-                    className="text-xs"
-                  >
-                    {appointment.status}
-                  </Badge>
+                  {user?.role === 'patient' ? (
+                    <>
+                      <p className="text-sm font-medium text-gray-900">{appointment.doctorName}</p>
+                      <Badge 
+                        variant={getStatusColor(appointment.status)}
+                        className="text-xs"
+                      >
+                        {appointment.status}
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
+                      <Badge 
+                        variant={getStatusColor(appointment.status)}
+                        className="text-xs"
+                      >
+                        {appointment.status}
+                      </Badge>
+                    </>
+                  )}
                 </div>
               </div>
             ))
@@ -187,7 +221,11 @@ export default function MobileAppointmentsPage() {
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
+                  {user?.role === 'patient' ? (
+                    <p className="text-sm font-medium text-gray-900">{appointment.doctorName}</p>
+                  ) : (
+                    <p className="text-sm font-medium text-gray-900">{appointment.patientName}</p>
+                  )}
                 </div>
               </div>
             ))

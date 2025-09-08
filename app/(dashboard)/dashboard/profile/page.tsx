@@ -80,35 +80,37 @@ export default function DesktopProfilePage() {
             </CardContent>
           </Card>
 
-          {/* Quick Stats */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Quick Stats</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Calendar className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm text-blue-600">Today's Patients</span>
+          {/* Quick Stats - only for staff */}
+          {user.role !== 'patient' && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Quick Stats</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Calendar className="h-5 w-5 text-blue-600" />
+                    <span className="text-sm text-blue-600">Today's Patients</span>
+                  </div>
+                  <span className="text-2xl font-bold text-blue-600">156</span>
                 </div>
-                <span className="text-2xl font-bold text-blue-600">156</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Users className="h-5 w-5 text-green-600" />
-                  <span className="text-sm text-green-600">Total Patients</span>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Users className="h-5 w-5 text-green-600" />
+                    <span className="text-sm text-green-600">Total Patients</span>
+                  </div>
+                  <span className="text-2xl font-bold text-green-600">2,847</span>
                 </div>
-                <span className="text-2xl font-bold text-green-600">2,847</span>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                <div className="flex items-center space-x-3">
-                  <Activity className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm text-purple-600">Appointments</span>
+                <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                  <div className="flex items-center space-x-3">
+                    <Activity className="h-5 w-5 text-purple-600" />
+                    <span className="text-sm text-purple-600">Appointments</span>
+                  </div>
+                  <span className="text-2xl font-bold text-purple-600">24</span>
                 </div>
-                <span className="text-2xl font-bold text-purple-600">24</span>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Right Column - Details & Actions */}

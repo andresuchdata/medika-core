@@ -128,24 +128,26 @@ export default function MobileProfilePage() {
         </CardContent>
       </Card>
 
-      {/* Statistics */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Your Statistics</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            <div className="text-center p-3 bg-blue-50 rounded-lg">
-              <p className="text-2xl font-bold text-blue-600">156</p>
-              <p className="text-sm text-blue-600">Patients Today</p>
+      {/* Statistics - only for staff */}
+      {user.role !== 'patient' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Statistics</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="text-center p-3 bg-blue-50 rounded-lg">
+                <p className="text-2xl font-bold text-blue-600">156</p>
+                <p className="text-sm text-blue-600">Patients Today</p>
+              </div>
+              <div className="text-center p-3 bg-green-50 rounded-lg">
+                <p className="text-2xl font-bold text-green-600">24</p>
+                <p className="text-sm text-green-600">Appointments</p>
+              </div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-lg">
-              <p className="text-2xl font-bold text-green-600">24</p>
-              <p className="text-sm text-green-600">Appointments</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Logout button */}
       <div className="mt-6">

@@ -114,43 +114,237 @@ export function DoctorsLoadingState() {
   )
 }
 
-// Loading state for queue page
+// Loading state for queue page (staff view)
 export function QueueLoadingState() {
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* Header skeleton */}
-      <div className="space-y-4">
-        <Shimmer width={192} height={32} className="rounded" />
-        <Shimmer width={320} height={16} className="rounded" />
+      <div className="flex items-center justify-between">
+        <div>
+          <Shimmer width={192} height={32} className="rounded mb-2" />
+          <Shimmer width={320} height={16} className="rounded" />
+        </div>
+        <Shimmer width={100} height={36} className="rounded" />
       </div>
 
-      {/* Queue stats */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="rounded-lg border bg-card p-6">
-            <div className="flex items-center space-x-4">
-              <Shimmer width={48} height={48} className="rounded-lg" />
-              <div className="space-y-2">
-                <Shimmer width={80} height={16} className="rounded" />
-                <Shimmer width={64} height={24} className="rounded" />
+      {/* Queue stats skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="60%" height={24} className="rounded" />
+          <Shimmer width="40%" height={16} className="rounded" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="text-center p-4 bg-blue-50 rounded-lg">
+            <Shimmer width={48} height={32} className="rounded mx-auto mb-2" />
+            <Shimmer width={80} height={16} className="rounded mx-auto" />
+          </div>
+          <div className="text-center p-4 bg-green-50 rounded-lg">
+            <Shimmer width={48} height={32} className="rounded mx-auto mb-2" />
+            <Shimmer width={80} height={16} className="rounded mx-auto" />
+          </div>
+          <div className="text-center p-4 bg-orange-50 rounded-lg">
+            <Shimmer width={48} height={32} className="rounded mx-auto mb-2" />
+            <Shimmer width={80} height={16} className="rounded mx-auto" />
+          </div>
+        </div>
+      </div>
+
+      {/* Queue list skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="40%" height={24} className="rounded" />
+          <Shimmer width="60%" height={16} className="rounded" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-3">
+                <Shimmer width={32} height={32} className="rounded-full" />
+                <div>
+                  <Shimmer width={120} height={16} className="rounded mb-1" />
+                  <Shimmer width={100} height={14} className="rounded mb-1" />
+                  <Shimmer width={80} height={12} className="rounded" />
+                </div>
+              </div>
+              <div className="text-right">
+                <Shimmer width={60} height={14} className="rounded mb-2" />
+                <Shimmer width={80} height={20} className="rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Loading state for patient queue page
+export function PatientQueueLoadingState() {
+  return (
+    <div className="space-y-4 sm:space-y-6">
+      {/* Header skeleton */}
+      <div className="flex items-center justify-between">
+        <div>
+          <Shimmer width={256} height={32} className="rounded mb-2" />
+          <Shimmer width={384} height={16} className="rounded" />
+        </div>
+        <Shimmer width={100} height={36} className="rounded" />
+      </div>
+
+      {/* Patient queue position skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="50%" height={24} className="rounded" />
+          <Shimmer width="70%" height={16} className="rounded" />
+        </div>
+        <div className="text-center space-y-4">
+          <Shimmer width={120} height={96} className="rounded mx-auto mb-2" />
+          <Shimmer width={120} height={20} className="rounded mx-auto" />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <div className="p-4 bg-blue-50 rounded-lg">
+              <Shimmer width={60} height={32} className="rounded mx-auto mb-2" />
+              <Shimmer width={100} height={16} className="rounded mx-auto" />
+            </div>
+            <div className="p-4 bg-green-50 rounded-lg">
+              <Shimmer width={60} height={32} className="rounded mx-auto mb-2" />
+              <Shimmer width={100} height={16} className="rounded mx-auto" />
+            </div>
+          </div>
+          
+          <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+            <Shimmer width="100%" height={16} className="rounded mb-2" />
+            <Shimmer width="80%" height={16} className="rounded" />
+          </div>
+        </div>
+      </div>
+
+      {/* Status indicator skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="40%" height={24} className="rounded" />
+        </div>
+        <div className="flex items-center justify-center p-4">
+          <Shimmer width={120} height={32} className="rounded" />
+        </div>
+        <Shimmer width="100%" height={16} className="rounded mx-auto mt-2" />
+      </div>
+    </div>
+  )
+}
+
+// Loading state for mobile queue page (staff view)
+export function MobileQueueLoadingState() {
+  return (
+    <div className="space-y-4 pb-20">
+      {/* Page header skeleton */}
+      <div className="text-center mb-6">
+        <Shimmer width={192} height={32} className="rounded mx-auto mb-2" />
+        <Shimmer width={256} height={16} className="rounded mx-auto" />
+      </div>
+
+      {/* Queue status skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="50%" height={24} className="rounded" />
+          <Shimmer width="70%" height={16} className="rounded" />
+        </div>
+        <div className="grid grid-cols-2 gap-4 text-center">
+          <div className="p-3 bg-blue-50 rounded-lg">
+            <Shimmer width={48} height={32} className="rounded mx-auto mb-2" />
+            <Shimmer width={60} height={16} className="rounded mx-auto" />
+          </div>
+          <div className="p-3 bg-green-50 rounded-lg">
+            <Shimmer width={48} height={32} className="rounded mx-auto mb-2" />
+            <Shimmer width={60} height={16} className="rounded mx-auto" />
+          </div>
+        </div>
+      </div>
+
+      {/* Current queue skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="40%" height={24} className="rounded" />
+          <Shimmer width="60%" height={16} className="rounded" />
+        </div>
+        <div className="space-y-3">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center space-x-3">
+                <Shimmer width={32} height={32} className="rounded-full" />
+                <div>
+                  <Shimmer width={100} height={16} className="rounded mb-1" />
+                  <Shimmer width={80} height={14} className="rounded mb-1" />
+                  <Shimmer width={60} height={12} className="rounded" />
+                </div>
+              </div>
+              <div className="text-right">
+                <Shimmer width={60} height={14} className="rounded mb-2" />
+                <Shimmer width={80} height={20} className="rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// Loading state for mobile patient queue page
+export function MobilePatientQueueLoadingState() {
+  return (
+    <div className="space-y-4 pb-20">
+      {/* Page header skeleton */}
+      <div className="text-center mb-6">
+        <Shimmer width={192} height={32} className="rounded mx-auto mb-2" />
+        <Shimmer width={256} height={16} className="rounded mx-auto" />
+      </div>
+
+      {/* Patient's queue position skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="50%" height={24} className="rounded" />
+          <Shimmer width="70%" height={16} className="rounded" />
+        </div>
+        <div className="text-center space-y-4">
+          <Shimmer width={80} height={80} className="rounded mx-auto mb-2" />
+          <Shimmer width={120} height={20} className="rounded mx-auto" />
+          
+          <div className="grid grid-cols-2 gap-4 mt-6">
+            <div className="p-3 bg-blue-50 rounded-lg">
+              <Shimmer width={40} height={24} className="rounded mx-auto mb-2" />
+              <Shimmer width={60} height={14} className="rounded mx-auto" />
+            </div>
+            <div className="p-3 bg-green-50 rounded-lg">
+              <Shimmer width={40} height={24} className="rounded mx-auto mb-2" />
+              <Shimmer width={60} height={14} className="rounded mx-auto" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Status and doctor info skeleton */}
+      <div className="rounded-lg border bg-card p-6">
+        <div className="space-y-4 mb-4">
+          <Shimmer width="50%" height={24} className="rounded" />
+        </div>
+        <div className="space-y-3">
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center space-x-3">
+              <Shimmer width={20} height={20} className="rounded" />
+              <div>
+                <Shimmer width={60} height={16} className="rounded mb-1" />
+                <Shimmer width={100} height={14} className="rounded" />
               </div>
             </div>
           </div>
-        ))}
-      </div>
-
-      {/* Queue list */}
-      <div className="space-y-3">
-        {Array.from({ length: 5 }).map((_, i) => (
-          <div key={i} className="flex items-center space-x-4 p-4">
-            <Shimmer width={48} height={48} className="rounded-full" />
-            <div className="space-y-2 flex-1">
-              <Shimmer width="33%" height={16} className="rounded" />
-              <Shimmer width="50%" height={12} className="rounded" />
-            </div>
-            <Shimmer width={80} height={32} className="rounded" />
+          
+          <div className="flex items-center justify-center p-4">
+            <Shimmer width={100} height={32} className="rounded" />
           </div>
-        ))}
+          
+          <Shimmer width="100%" height={16} className="rounded mx-auto" />
+        </div>
       </div>
     </div>
   )
