@@ -13,10 +13,11 @@ export interface LoginResponse {
       email: string
       name: string
       role: string
-      organizationId?: string
+      organization_id?: string
       phone?: string
       avatar?: string
-      isActive: boolean
+      is_active: boolean
+      profile: any
     }
     token: string
   }
