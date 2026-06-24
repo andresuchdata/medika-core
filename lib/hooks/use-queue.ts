@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useCallback } from 'react'
 import { useAuth } from '@/lib/auth/auth-context'
 import { queueService } from '@/lib/api/queue-service'

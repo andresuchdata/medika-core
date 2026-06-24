@@ -1,3 +1,5 @@
+'use client'
+
 import { useCallback } from 'react'
 import { useAuth } from '@/lib/stores/auth-store'
 import { authService } from '@/lib/auth/auth-service'

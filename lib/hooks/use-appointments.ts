@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { AppointmentWithNames } from '@/types'
 import { appointmentService } from '@/lib/api/appointment-service'

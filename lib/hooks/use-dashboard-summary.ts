@@ -1,3 +1,5 @@
+'use client'
+
 import { useState, useEffect, useRef } from 'react'
 import { dashboardService, DashboardSummaryResponse, DashboardSummaryParams } from '@/lib/api'
 
