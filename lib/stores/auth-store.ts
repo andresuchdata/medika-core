@@ -98,10 +98,10 @@ export const useAuthStore = create<AuthState>()(
                 email: response.data.user.email,
                 name: response.data.user.name,
                 role: response.data.user.role,
-                organizationId: response.data.user.organizationId,
+                organizationId: response.data.user.organization_id,
                 phone: response.data.user.phone,
                 avatar: response.data.user.avatar,
-                isActive: response.data.user.isActive
+                isActive: response.data.user.is_active
               }
 
               set({

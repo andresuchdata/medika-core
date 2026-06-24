@@ -153,7 +153,7 @@ export default function MobileOrganizationsPage() {
                   <div className="space-y-2">
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <MapPin className="h-4 w-4" />
-                      <span>{org.address?.city}, {org.address?.state}</span>
+                      <span>{org.address}</span>
                     </div>
                     <div className="flex items-center space-x-2 text-sm text-gray-600">
                       <Phone className="h-4 w-4" />

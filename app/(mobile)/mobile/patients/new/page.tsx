@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -34,7 +35,7 @@ const patientSchema = z.object({
 
 type PatientFormValues = z.infer<typeof patientSchema>
 
-export default function MobileNewPatientPage() {
+function MobileNewPatientForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromAppointment = searchParams.get('from') === 'appointment'
@@ -385,3 +386,10 @@ export default function MobileNewPatientPage() {
   )
 }
 
+export default function MobileNewPatientPage() {
+  return (
+    <Suspense>
+      <MobileNewPatientForm />
+    </Suspense>
+  )
+}

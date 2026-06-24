@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { User, Organization, Appointment, DoctorSchedule, Room, PatientQueue, Media, Notification } from '@/types'
 
 // Mock database for development

@@ -90,8 +90,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
           email: response.data.user.email,
           name: response.data.user.name,
           role: response.data.user.role,
-          organizationId: response.data.user.organizationId,
-          isActive: response.data.user.isActive
+          organizationId: response.data.user.organization_id,
+          isActive: response.data.user.is_active
         }
 
         setToken(response.data.token)

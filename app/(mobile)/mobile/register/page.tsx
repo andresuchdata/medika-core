@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Stethoscope, Eye, EyeOff, ArrowLeft, UserPlus } from 'lucide-react'
 import { useAuth } from '@/lib/auth/auth-context'
 
-export default function MobileRegisterPage() {
+function MobileRegisterForm() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -243,5 +243,13 @@ export default function MobileRegisterPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MobileRegisterPage() {
+  return (
+    <Suspense>
+      <MobileRegisterForm />
+    </Suspense>
   )
 }

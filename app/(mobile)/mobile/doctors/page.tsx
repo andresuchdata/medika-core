@@ -137,11 +137,11 @@ export default function MobileDoctorsPage() {
                       </div>
                       <div>
                         <h3 className="font-medium text-gray-900">{doctor.name}</h3>
-                        <p className="text-sm text-gray-600">{doctor.specialty}</p>
+                        <p className="text-sm text-gray-600">{doctor.spesialisasi}</p>
                       </div>
                     </div>
-                    <Badge variant={doctor.status === 'active' ? 'default' : 'secondary'}>
-                      {doctor.status === 'active' ? 'Active' : doctor.status === 'on-leave' ? 'On Leave' : 'Inactive'}
+                    <Badge variant={doctor.status === 'aktif' ? 'default' : 'secondary'}>
+                      {doctor.status === 'aktif' ? 'Aktif' : 'Nonaktif'}
                     </Badge>
                   </div>
 
@@ -160,7 +160,7 @@ export default function MobileDoctorsPage() {
                   {/* Availability */}
                   <div className="flex items-center space-x-2 text-sm text-gray-600">
                     <Clock className="h-4 w-4" />
-                    <span>Next available: {doctor.nextAvailable || 'Not specified'}</span>
+                    <span>{doctor.experience} tahun pengalaman</span>
                   </div>
 
                   {/* Actions */}

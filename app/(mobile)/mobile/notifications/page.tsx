@@ -77,7 +77,7 @@ export default function MobileNotificationsPage() {
       {/* Notifications list */}
       <div className="space-y-3">
         {notifications.map((notification, index) => (
-          <Card key={index} className={notification.isRead ? 'opacity-75' : ''}>
+          <Card key={index} className={notification.is_read ? 'opacity-75' : ''}>
             <CardContent className="p-4">
               <div className="space-y-3">
                 {/* Notification header */}

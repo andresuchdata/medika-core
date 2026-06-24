@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -15,6 +15,7 @@ import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { cn } from '@/lib/utils/cn'
 import { patientService } from '@/lib/api/patient-service'
+import type { Penjamin } from '@/types'
 
 const steps = [
   { id: 1, label: 'Data Diri', icon: User },
@@ -63,7 +64,7 @@ const PROVINSI = [
   'Maluku','Maluku Utara','Papua Barat','Papua',
 ]
 
-export default function NewPatientPage() {
+function NewPatientForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromAppointment = searchParams.get('from') === 'appointment'
@@ -126,13 +127,14 @@ export default function NewPatientPage() {
           relationship: data.emergencyRelationship,
         },
         penjamin: data.penjaminJenis && data.penjaminJenis !== 'umum' ? [{
+          id: '',
           jenis: data.penjaminJenis,
           nomorKartu: data.penjaminNomor || '',
           kelas: data.penjaminKelas,
           segmen: data.penjaminSegmen,
           faskesTk1: data.penjaminFaskesTk1,
           status: 'aktif',
-        }] : [],
+        } as Penjamin] : [],
       }
       await patientService.createPatient(payload)
       router.push(fromAppointment ? '/dashboard/appointments/new?newPatient=true' : '/dashboard/patients')
@@ -483,5 +485,13 @@ export default function NewPatientPage() {
         </form>
       </Form>
     </div>
+  )
+}
+
+export default function NewPatientPage() {
+  return (
+    <Suspense>
+      <NewPatientForm />
+    </Suspense>
   )
 }

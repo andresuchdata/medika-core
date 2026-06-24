@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Stethoscope, Eye, EyeOff, ArrowLeft } from 'lucide-react'
 import { useAuth } from '@/lib/stores'
 
-export default function MobileLoginPage() {
+function MobileLoginForm() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -22,8 +22,8 @@ export default function MobileLoginPage() {
   // Redirect authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      const returnUrl = searchParams.get('returnUrl') || 
-                       localStorage.getItem('auth_return_url') || 
+      const returnUrl = searchParams.get('returnUrl') ||
+                       localStorage.getItem('auth_return_url') ||
                        '/mobile/dashboard'
       localStorage.removeItem('auth_return_url')
       router.push(returnUrl)
@@ -35,15 +35,15 @@ export default function MobileLoginPage() {
     setError('')
 
     const result = await login(email, password)
-    
+
     console.log('resssss', result)
     if (result.success) {
       // Get return URL and redirect immediately
-      const returnUrl = searchParams.get('returnUrl') || 
-                       localStorage.getItem('auth_return_url') || 
+      const returnUrl = searchParams.get('returnUrl') ||
+                       localStorage.getItem('auth_return_url') ||
                        '/mobile/dashboard'
       localStorage.removeItem('auth_return_url')
-      
+
       // Force immediate redirect
       window.location.href = returnUrl
     } else {
@@ -193,5 +193,13 @@ export default function MobileLoginPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MobileLoginPage() {
+  return (
+    <Suspense>
+      <MobileLoginForm />
+    </Suspense>
   )
 }

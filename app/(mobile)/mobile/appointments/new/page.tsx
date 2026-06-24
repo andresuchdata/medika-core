@@ -1,5 +1,6 @@
 "use client"
 
+import { Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { TimePicker } from '@/components/ui/time-picker'
@@ -31,7 +32,7 @@ const appointmentSchema = z.object({
 
 type AppointmentFormValues = z.infer<typeof appointmentSchema>
 
-export default function MobileNewAppointmentPage() {
+function MobileNewAppointmentForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const newPatientAdded = searchParams.get('newPatient') === 'true'
@@ -335,5 +336,13 @@ export default function MobileNewAppointmentPage() {
       {/* Bottom spacing to prevent overlap with bottom navigation */}
       <div className="h-20"></div>
     </div>
+  )
+}
+
+export default function MobileNewAppointmentPage() {
+  return (
+    <Suspense>
+      <MobileNewAppointmentForm />
+    </Suspense>
   )
 }

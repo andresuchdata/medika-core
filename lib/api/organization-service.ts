@@ -5,13 +5,7 @@ export interface Organization {
   id: string
   name: string
   type: 'hospital' | 'clinic' | 'urgent_care' | 'private_practice' | 'laboratory'
-  address: {
-    street: string
-    city: string
-    state: string
-    zipCode: string
-    country: string
-  }
+  address: string
   phone: string
   email: string
   website?: string

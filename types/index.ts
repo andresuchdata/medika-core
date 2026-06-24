@@ -1,3 +1,5 @@
+export type { Organization } from '@/lib/api/organization-service'
+
 // User and Authentication Types
 export interface User {
   id: string
@@ -283,4 +285,20 @@ export interface Prescription {
   dosage: string
   qty: number
   notes?: string
+}
+
+export interface DoctorSchedule {
+  id: string
+  doctorId: string
+  dayOfWeek: number
+  startTime: string
+  endTime: string
+  isAvailable: boolean
+}
+
+export interface Media {
+  id: string
+  url: string
+  type: string
+  ownerId: string
 }
