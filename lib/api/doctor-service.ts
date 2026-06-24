@@ -3,19 +3,22 @@ import { ApiResponse } from '@/types'
 
 export interface Doctor {
   id: string
+  userId: string
   name: string
   email: string
   phone: string
-  specialty: string
-  licenseNumber: string
-  status: 'active' | 'inactive' | 'on-leave'
-  organizationId: string
+  spesialisasi: string
+  kodeSpesialis?: string
+  str: string
+  strExpiry?: string
+  sip: string
+  sipExpiry?: string
+  experience: number
+  education: string
   avatar?: string
-  bio?: string
-  experience?: number
-  education?: string[]
-  certifications?: string[]
-  nextAvailable?: string
+  bio: string
+  status: 'aktif' | 'nonaktif'
+  organizationId: string
   createdAt: string
   updatedAt: string
 }

@@ -1,396 +1,487 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { useState } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Textarea } from '@/components/ui/textarea'
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form'
-import { PhoneInput } from '@/components/ui/phone-input'
-import { User, ArrowLeft } from 'lucide-react'
+import { ArrowLeft, ArrowRight, User, MapPin, Phone, CreditCard, Check } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { cn } from '@/lib/utils/cn'
+import { patientService } from '@/lib/api/patient-service'
 
-const patientSchema = z.object({
-  firstName: z.string().min(1, 'First name is required'),
-  lastName: z.string().min(1, 'Last name is required'),
-  dateOfBirth: z.string().min(1, 'Date of birth is required'),
-  gender: z.string().min(1, 'Gender is required'),
-  email: z.string().email('Invalid email').optional().or(z.literal('')),
-  phone: z.string().min(6, 'Phone is required'),
-  address: z.string().optional().or(z.literal('')),
-  bloodType: z.string().optional().or(z.literal('')),
-  allergies: z.string().optional().or(z.literal('')),
-  medicalHistory: z.string().optional().or(z.literal('')),
-  emergencyContact: z.string().optional().or(z.literal('')),
-  emergencyPhone: z.string().optional().or(z.literal('')),
-  emergencyRelation: z.string().optional().or(z.literal('')),
+const steps = [
+  { id: 1, label: 'Data Diri', icon: User },
+  { id: 2, label: 'Alamat', icon: MapPin },
+  { id: 3, label: 'Kontak Darurat', icon: Phone },
+  { id: 4, label: 'Penjamin', icon: CreditCard },
+]
+
+const schema = z.object({
+  name: z.string().min(2, 'Nama minimal 2 karakter'),
+  nik: z.string().length(16, 'NIK harus 16 digit').regex(/^\d+$/, 'NIK hanya angka'),
+  dateOfBirth: z.string().min(1, 'Tanggal lahir wajib diisi'),
+  jenisKelamin: z.enum(['L', 'P'], { required_error: 'Wajib dipilih' }),
+  golonganDarah: z.string().optional(),
+  agama: z.string().optional(),
+  statusPerkawinan: z.string().optional(),
+  phone: z.string().min(8, 'Nomor tidak valid'),
+  email: z.string().email('Email tidak valid').optional().or(z.literal('')),
+  jalan: z.string().min(1, 'Alamat wajib diisi'),
+  rt: z.string().optional(),
+  rw: z.string().optional(),
+  kelurahan: z.string().optional(),
+  kecamatan: z.string().optional(),
+  kabupaten: z.string().min(1, 'Kabupaten/Kota wajib diisi'),
+  provinsi: z.string().min(1, 'Provinsi wajib diisi'),
+  kodePos: z.string().optional(),
+  emergencyName: z.string().min(1, 'Nama wajib diisi'),
+  emergencyPhone: z.string().min(8, 'Nomor tidak valid'),
+  emergencyRelationship: z.string().min(1, 'Hubungan wajib diisi'),
+  penjaminJenis: z.string().optional(),
+  penjaminNomor: z.string().optional(),
+  penjaminKelas: z.string().optional(),
+  penjaminSegmen: z.string().optional(),
+  penjaminFaskesTk1: z.string().optional(),
 })
 
-type PatientFormValues = z.infer<typeof patientSchema>
+type FormValues = z.infer<typeof schema>
 
-export default function DashboardNewPatientPage() {
+const PROVINSI = [
+  'Aceh','Sumatera Utara','Sumatera Barat','Riau','Kepulauan Riau',
+  'Jambi','Sumatera Selatan','Kepulauan Bangka Belitung','Bengkulu','Lampung',
+  'DKI Jakarta','Jawa Barat','Banten','Jawa Tengah','DI Yogyakarta','Jawa Timur',
+  'Bali','Nusa Tenggara Barat','Nusa Tenggara Timur',
+  'Kalimantan Barat','Kalimantan Tengah','Kalimantan Selatan','Kalimantan Timur','Kalimantan Utara',
+  'Sulawesi Utara','Gorontalo','Sulawesi Tengah','Sulawesi Barat','Sulawesi Selatan','Sulawesi Tenggara',
+  'Maluku','Maluku Utara','Papua Barat','Papua',
+]
+
+export default function NewPatientPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const fromAppointment = searchParams.get('from') === 'appointment'
-  
-  const form = useForm<PatientFormValues>({
-    resolver: zodResolver(patientSchema),
+  const [step, setStep] = useState(1)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(schema),
     defaultValues: {
-      firstName: '',
-      lastName: '',
-      dateOfBirth: '',
-      gender: '',
-      email: '',
-      phone: '',
-      address: '',
-      bloodType: '',
-      allergies: '',
-      medicalHistory: '',
-      emergencyContact: '',
-      emergencyPhone: '',
-      emergencyRelation: '',
+      name: '', nik: '', dateOfBirth: '', jenisKelamin: undefined,
+      golonganDarah: '', agama: '', statusPerkawinan: '', phone: '', email: '',
+      jalan: '', rt: '', rw: '', kelurahan: '', kecamatan: '',
+      kabupaten: '', provinsi: '', kodePos: '',
+      emergencyName: '', emergencyPhone: '', emergencyRelationship: '',
+      penjaminJenis: '', penjaminNomor: '', penjaminKelas: '',
+      penjaminSegmen: '', penjaminFaskesTk1: '',
     },
   })
 
-  const onSubmit = (data: PatientFormValues) => {
-    // TODO: handle submit
-    console.log('Patient form submit', data)
-    
-    // If coming from appointment page, go back to appointment with success message
-    if (fromAppointment) {
-      router.push('/dashboard/appointments/new?newPatient=true')
-    } else {
-      router.push('/dashboard/patients')
+  const stepFields: Record<number, (keyof FormValues)[]> = {
+    1: ['name', 'nik', 'dateOfBirth', 'jenisKelamin', 'phone'],
+    2: ['jalan', 'kabupaten', 'provinsi'],
+    3: ['emergencyName', 'emergencyPhone', 'emergencyRelationship'],
+    4: [],
+  }
+
+  const goNext = async () => {
+    const valid = await form.trigger(stepFields[step])
+    if (valid) setStep(s => Math.min(s + 1, 4))
+  }
+
+  const onSubmit = async (data: FormValues) => {
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const payload = {
+        name: data.name,
+        nik: data.nik,
+        email: data.email || '',
+        phone: data.phone,
+        dateOfBirth: data.dateOfBirth,
+        jenisKelamin: data.jenisKelamin,
+        golonganDarah: data.golonganDarah,
+        agama: data.agama,
+        statusPerkawinan: data.statusPerkawinan,
+        alamat: {
+          jalan: data.jalan,
+          rt: data.rt,
+          rw: data.rw,
+          kelurahan: data.kelurahan,
+          kecamatan: data.kecamatan,
+          kabupaten: data.kabupaten,
+          provinsi: data.provinsi,
+          kodePos: data.kodePos,
+        },
+        emergencyContact: {
+          name: data.emergencyName,
+          phone: data.emergencyPhone,
+          relationship: data.emergencyRelationship,
+        },
+        penjamin: data.penjaminJenis && data.penjaminJenis !== 'umum' ? [{
+          jenis: data.penjaminJenis,
+          nomorKartu: data.penjaminNomor || '',
+          kelas: data.penjaminKelas,
+          segmen: data.penjaminSegmen,
+          faskesTk1: data.penjaminFaskesTk1,
+          status: 'aktif',
+        }] : [],
+      }
+      await patientService.createPatient(payload)
+      router.push(fromAppointment ? '/dashboard/appointments/new?newPatient=true' : '/dashboard/patients')
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Gagal mendaftarkan pasien')
+    } finally {
+      setSubmitting(false)
     }
   }
 
+  const penjaminJenis = form.watch('penjaminJenis')
+
   return (
-    <div className="space-y-6">
-      {/* Page header */}
+    <div className="max-w-2xl mx-auto space-y-6">
       <div className="flex items-center gap-3">
-        <Button 
-          variant="ghost" 
-          size="icon"
-          onClick={() => {
-            if (fromAppointment) {
-              router.push('/dashboard/appointments/new?newPatient=true')
-            } else {
-              router.push('/dashboard/patients')
-            }
-          }}
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </Button>
+        <Link href={fromAppointment ? '/dashboard/appointments/new' : '/dashboard/patients'}>
+          <Button variant="ghost" size="icon"><ArrowLeft className="h-4 w-4" /></Button>
+        </Link>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">New Patient</h1>
-          <p className="text-gray-600">
-            {fromAppointment ? 'Add a new patient for appointment' : 'Add a new patient to the system'}
-          </p>
+          <h1 className="text-2xl font-bold text-gray-900">Daftar Pasien Baru</h1>
+          <p className="text-sm text-gray-500">Isi data pasien dengan lengkap dan benar</p>
         </div>
       </div>
-      
-      {/* Breadcrumb navigation */}
-      {fromAppointment && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Link href="/dashboard/appointments" className="hover:text-foreground">
-              Appointments
-            </Link>
-            <span>/</span>
-            <Link href="/dashboard/appointments/new" className="hover:text-foreground">
-              New Appointment
-            </Link>
-            <span>/</span>
-            <span className="text-foreground">New Patient</span>
-          </div>
-          
-          {/* Form state preservation indicator */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-              <p className="text-sm text-blue-800">
-                Your appointment details are saved. You'll return to complete the appointment after adding the patient.
-              </p>
+
+      {/* Step indicator */}
+      <div className="flex items-center">
+        {steps.map((s, idx) => (
+          <div key={s.id} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1 min-w-0">
+              <div className={cn(
+                'w-9 h-9 rounded-full flex items-center justify-center border-2 text-sm font-semibold shrink-0',
+                step > s.id ? 'bg-green-500 border-green-500 text-white'
+                  : step === s.id ? 'bg-blue-600 border-blue-600 text-white'
+                  : 'bg-white border-gray-300 text-gray-400'
+              )}>
+                {step > s.id ? <Check className="h-4 w-4" /> : s.id}
+              </div>
+              <span className={cn('text-xs font-medium whitespace-nowrap', step === s.id ? 'text-blue-600' : 'text-gray-400')}>
+                {s.label}
+              </span>
             </div>
+            {idx < steps.length - 1 && (
+              <div className={cn('flex-1 h-0.5 mb-5 mx-1', step > s.id ? 'bg-green-400' : 'bg-gray-200')} />
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Patient form */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Personal Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Personal Information
-            </CardTitle>
-            <CardDescription>Basic patient details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="firstName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>First Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="John" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="lastName"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Last Name</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Doe" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="dateOfBirth"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Date of Birth</FormLabel>
-                        <FormControl>
-                          <Input type="date" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={form.control}
-                    name="gender"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Gender</FormLabel>
-                        <FormControl>
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select gender" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="male">Male</SelectItem>
-                              <SelectItem value="female">Female</SelectItem>
-                              <SelectItem value="other">Other</SelectItem>
-                              <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input type="email" placeholder="john.doe@email.com" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="phone"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Phone Number</FormLabel>
-                      <FormControl>
-                        <PhoneInput value={field.value} onChange={field.onChange} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <FormField
-                  control={form.control}
-                  name="address"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Address</FormLabel>
-                      <FormControl>
-                        <Textarea placeholder="Enter full address..." rows={2} {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="bloodType"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Blood Type</FormLabel>
-                      <FormControl>
-                        <Select value={field.value} onValueChange={field.onChange}>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select blood type" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="a-positive">A+</SelectItem>
-                            <SelectItem value="a-negative">A-</SelectItem>
-                            <SelectItem value="b-positive">B+</SelectItem>
-                            <SelectItem value="b-negative">B-</SelectItem>
-                            <SelectItem value="ab-positive">AB+</SelectItem>
-                            <SelectItem value="ab-negative">AB-</SelectItem>
-                            <SelectItem value="o-positive">O+</SelectItem>
-                            <SelectItem value="o-negative">O-</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
-
-        {/* Medical Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="h-5 w-5" />
-              Medical Information
-            </CardTitle>
-            <CardDescription>Health-related details</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <FormField
-                control={form.control}
-                name="allergies"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Allergies</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="List any known allergies..." rows={3} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              
-              <FormField
-                control={form.control}
-                name="medicalHistory"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Medical History</FormLabel>
-                    <FormControl>
-                      <Textarea placeholder="Previous conditions, surgeries, etc..." rows={4} {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
+        ))}
       </div>
 
-      {/* Emergency Contact */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Emergency Contact</CardTitle>
-          <CardDescription>Emergency contact information</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="emergencyContact"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Emergency contact person" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="emergencyPhone"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Contact Phone</FormLabel>
-                  <FormControl>
-                    <Input type="tel" placeholder="+1-555-0000" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="emergencyRelation"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Relationship</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Spouse, parent, etc." {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          {/* Step 1: Data Diri */}
+          {step === 1 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <User className="h-4 w-4 text-blue-600" /> Data Diri Pasien
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField control={form.control} name="name" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama Lengkap <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input placeholder="Sesuai KTP" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="nik" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>NIK <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input placeholder="16 digit" maxLength={16} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="dateOfBirth" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Tanggal Lahir <span className="text-red-500">*</span></FormLabel>
+                      <FormControl><Input type="date" {...field} /></FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="jenisKelamin" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Jenis Kelamin <span className="text-red-500">*</span></FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="Pilih" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="L">Laki-laki</SelectItem>
+                          <SelectItem value="P">Perempuan</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-3 gap-3">
+                  <FormField control={form.control} name="golonganDarah" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Gol. Darah</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="-" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {['A','B','AB','O'].map(g => <SelectItem key={g} value={g}>{g}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="agama" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Agama</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="-" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          {['Islam','Kristen','Katolik','Hindu','Buddha','Konghucu','Lainnya'].map(a => (
+                            <SelectItem key={a} value={a.toLowerCase()}>{a}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name="statusPerkawinan" render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Status Kawin</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl><SelectTrigger><SelectValue placeholder="-" /></SelectTrigger></FormControl>
+                        <SelectContent>
+                          <SelectItem value="belum_kawin">Belum Kawin</SelectItem>
+                          <SelectItem value="kawin">Kawin</SelectItem>
+                          <SelectItem value="cerai_hidup">Cerai Hidup</SelectItem>
+                          <SelectItem value="cerai_mati">Cerai Mati</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="phone" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>No. Telepon <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input placeholder="08xxxxxxxxxx" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="email" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Email</FormLabel>
+                    <FormControl><Input type="email" placeholder="opsional" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </CardContent>
+            </Card>
+          )}
 
-      {/* Form actions */}
-      <div className="flex justify-end gap-3">
-        <Button 
-          variant="outline" 
-          onClick={() => {
-            if (fromAppointment) {
-              router.push('/dashboard/appointments/new?newPatient=true')
-            } else {
-              router.push('/dashboard/patients')
-            }
-          }}
-        >
-          Cancel
-        </Button>
-        <Button onClick={form.handleSubmit(onSubmit)}>
-          Add Patient
-        </Button>
-      </div>
+          {/* Step 2: Alamat */}
+          {step === 2 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <MapPin className="h-4 w-4 text-blue-600" /> Alamat Domisili
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField control={form.control} name="jalan" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jalan / Alamat <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Textarea placeholder="Nama jalan, nomor rumah, blok..." rows={2} {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="rt" render={({ field }) => (
+                    <FormItem><FormLabel>RT</FormLabel><FormControl><Input placeholder="001" {...field} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="rw" render={({ field }) => (
+                    <FormItem><FormLabel>RW</FormLabel><FormControl><Input placeholder="001" {...field} /></FormControl></FormItem>
+                  )} />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField control={form.control} name="kelurahan" render={({ field }) => (
+                    <FormItem><FormLabel>Kelurahan/Desa</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                  )} />
+                  <FormField control={form.control} name="kecamatan" render={({ field }) => (
+                    <FormItem><FormLabel>Kecamatan</FormLabel><FormControl><Input {...field} /></FormControl></FormItem>
+                  )} />
+                </div>
+                <FormField control={form.control} name="kabupaten" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Kabupaten/Kota <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="provinsi" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Provinsi <span className="text-red-500">*</span></FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Pilih provinsi" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {PROVINSI.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="kodePos" render={({ field }) => (
+                  <FormItem><FormLabel>Kode Pos</FormLabel><FormControl><Input placeholder="5 digit" maxLength={5} {...field} /></FormControl></FormItem>
+                )} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 3: Kontak Darurat */}
+          {step === 3 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Phone className="h-4 w-4 text-blue-600" /> Kontak Darurat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <FormField control={form.control} name="emergencyName" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Nama <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input placeholder="Nama lengkap" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="emergencyRelationship" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Hubungan <span className="text-red-500">*</span></FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Pilih" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        {['Suami/Istri','Orang Tua','Anak','Saudara','Kerabat','Teman','Lainnya'].map(r => (
+                          <SelectItem key={r} value={r}>{r}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+                <FormField control={form.control} name="emergencyPhone" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>No. Telepon <span className="text-red-500">*</span></FormLabel>
+                    <FormControl><Input placeholder="08xxxxxxxxxx" {...field} /></FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )} />
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Step 4: Penjamin */}
+          {step === 4 && (
+            <Card>
+              <CardHeader className="pb-3">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CreditCard className="h-4 w-4 text-blue-600" /> Data Penjamin / Asuransi
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                  Opsional — kosongkan jika pasien membayar mandiri (umum)
+                </div>
+                <FormField control={form.control} name="penjaminJenis" render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Jenis Penjamin</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl><SelectTrigger><SelectValue placeholder="Pilih jenis" /></SelectTrigger></FormControl>
+                      <SelectContent>
+                        <SelectItem value="bpjs_kesehatan">BPJS Kesehatan</SelectItem>
+                        <SelectItem value="bpjs_ketenagakerjaan">BPJS Ketenagakerjaan</SelectItem>
+                        <SelectItem value="asuransi">Asuransi Swasta</SelectItem>
+                        <SelectItem value="umum">Umum (Mandiri)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormItem>
+                )} />
+                {penjaminJenis && penjaminJenis !== 'umum' && (
+                  <>
+                    <FormField control={form.control} name="penjaminNomor" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nomor Kartu</FormLabel>
+                        <FormControl>
+                          <Input placeholder={penjaminJenis === 'bpjs_kesehatan' ? '13 digit nomor BPJS' : 'Nomor kartu'} {...field} />
+                        </FormControl>
+                      </FormItem>
+                    )} />
+                    {penjaminJenis === 'bpjs_kesehatan' && (
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField control={form.control} name="penjaminKelas" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Kelas</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="-" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                <SelectItem value="1">Kelas 1</SelectItem>
+                                <SelectItem value="2">Kelas 2</SelectItem>
+                                <SelectItem value="3">Kelas 3</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                        <FormField control={form.control} name="penjaminSegmen" render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Segmen</FormLabel>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="-" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {['PBI','PBPU','PPU','BP'].map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                          </FormItem>
+                        )} />
+                      </div>
+                    )}
+                    <FormField control={form.control} name="penjaminFaskesTk1" render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Faskes Tingkat 1</FormLabel>
+                        <FormControl><Input placeholder="Nama puskesmas/klinik BPJS" {...field} /></FormControl>
+                      </FormItem>
+                    )} />
+                  </>
+                )}
+                {submitError && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">{submitError}</div>
+                )}
+              </CardContent>
+            </Card>
+          )}
+
+          <div className="flex justify-between pt-2">
+            <Button type="button" variant="outline" onClick={step === 1 ? () => router.push('/dashboard/patients') : () => setStep(s => s - 1)}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              {step === 1 ? 'Batal' : 'Kembali'}
+            </Button>
+            {step < 4 ? (
+              <Button type="button" onClick={goNext}>
+                Lanjut <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            ) : (
+              <Button type="submit" disabled={submitting} className="bg-green-600 hover:bg-green-700">
+                {submitting ? 'Menyimpan...' : 'Daftarkan Pasien'}
+                {!submitting && <Check className="ml-2 h-4 w-4" />}
+              </Button>
+            )}
+          </div>
+        </form>
+      </Form>
     </div>
   )
 }

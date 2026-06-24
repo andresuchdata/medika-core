@@ -2,7 +2,7 @@ export class BaseApiService {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
+    this.baseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://api.sehatflow.my.id'
   }
 
   protected async request<T>(

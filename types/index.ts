@@ -26,35 +26,35 @@ export interface UserProfile {
   bloodType?: string
 }
 
-// Patient Types
-export interface Patient {
+// Indonesian address — 5-level administrative hierarchy
+export interface Alamat {
+  jalan: string
+  rt?: string
+  rw?: string
+  kelurahan?: string
+  kecamatan?: string
+  kabupaten: string
+  provinsi: string
+  kodePos?: string
+  kodeWilayah?: string
+}
+
+// BPJS / insurance membership
+export interface Penjamin {
   id: string
+  jenis: 'bpjs_kesehatan' | 'bpjs_ketenagakerjaan' | 'asuransi' | 'umum'
+  nomorKartu: string
+  kelas?: '1' | '2' | '3'
+  segmen?: 'PBI' | 'PBPU' | 'PPU' | 'BP'
+  faskesTk1?: string
+  status: 'aktif' | 'nonaktif'
+  validUntil?: string
+}
+
+export interface EmergencyContact {
   name: string
-  email: string
+  relationship: string
   phone: string
-  dateOfBirth: string
-  age: number
-  gender: 'male' | 'female' | 'other'
-  avatar?: string | null
-  address: {
-    street: string
-    city: string
-    state: string
-    zipCode: string
-    country: string
-  }
-  emergencyContact: {
-    name: string
-    relationship: string
-    phone: string
-  }
-  medicalHistory: MedicalCondition[]
-  allergies: string[]
-  medications: Medication[]
-  lastVisit?: string
-  nextAppointment?: string
-  status: 'active' | 'inactive'
-  organizationId: string
 }
 
 export interface MedicalCondition {
@@ -69,6 +69,36 @@ export interface Medication {
   dosage: string
   prescribedDate: string
   status: 'active' | 'discontinued' | 'completed'
+}
+
+// Patient Types — Indonesian fields
+export interface Patient {
+  id: string
+  noRekamMedis: string
+  nik: string
+  ihsNumber?: string
+  name: string
+  email: string
+  phone: string
+  dateOfBirth: string
+  age: number
+  jenisKelamin: 'L' | 'P'
+  golonganDarah?: string
+  agama?: string
+  statusPerkawinan?: string
+  avatar?: string | null
+  alamat: Alamat
+  emergencyContact: EmergencyContact
+  medicalHistory: MedicalCondition[]
+  allergies: string[]
+  medications: Medication[]
+  penjamin: Penjamin[]
+  lastVisit?: string
+  nextAppointment?: string
+  status: 'active' | 'inactive'
+  organizationId: string
+  createdAt: string
+  updatedAt: string
 }
 
 // API Response Types for Patients
@@ -94,28 +124,6 @@ export interface PatientsData {
 
 export type PatientsResponse = ApiResponse<PatientsData>
 
-// Organization Types
-export interface Organization {
-  id: string
-  name: string
-  type: 'hospital' | 'clinic' | 'private_practice'
-  address: string
-  phone: string
-  email: string
-  website?: string
-  businessHours: BusinessHours[]
-  isActive: boolean
-  createdAt: Date
-  updatedAt: Date
-}
-
-export interface BusinessHours {
-  day: number // 0-6 (Sunday-Saturday)
-  open: string // "09:00"
-  close: string // "17:00"
-  isOpen: boolean
-}
-
 // Appointment Types
 export interface Appointment {
   id: string
@@ -124,9 +132,9 @@ export interface Appointment {
   organizationId: string
   roomId?: string
   date: Date
-  startTime: string // "09:00"
-  endTime: string // "09:30"
-  duration: number // minutes
+  startTime: string
+  endTime: string
+  duration: number
   status: AppointmentStatus
   type: AppointmentType
   notes?: string
@@ -134,7 +142,6 @@ export interface Appointment {
   updatedAt: Date
 }
 
-// Extended Appointment type for API responses (includes patient and doctor names)
 export interface AppointmentWithNames {
   id: string
   patientId: string
@@ -143,34 +150,19 @@ export interface AppointmentWithNames {
   doctorName: string
   organizationId: string
   roomId?: string
-  date: string // API returns date as string
+  date: string
   startTime: string
   endTime: string
   duration: number
   status: AppointmentStatus
   type: AppointmentType
   notes?: string
-  createdAt: string // API returns as ISO string
-  updatedAt: string // API returns as ISO string
+  createdAt: string
+  updatedAt: string
 }
 
 export type AppointmentStatus = 'pending' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show'
-
 export type AppointmentType = 'consultation' | 'follow_up' | 'emergency' | 'routine_checkup'
-
-// Schedule Types
-export interface DoctorSchedule {
-  id: string
-  doctorId: string
-  organizationId: string
-  dayOfWeek: number // 0-6
-  startTime: string
-  endTime: string
-  isAvailable: boolean
-  maxAppointments: number
-  createdAt: Date
-  updatedAt: Date
-}
 
 // Queue Types
 export interface PatientQueue {
@@ -178,10 +170,21 @@ export interface PatientQueue {
   appointmentId: string
   organizationId: string
   position: number
-  estimatedWaitTime: number // minutes
+  estimatedWaitTime: number
   status: QueueStatus
   createdAt: Date
   updatedAt: Date
+}
+
+export interface PatientQueueWithDetails extends PatientQueue {
+  patientName: string
+  patientId: string
+  doctorName: string
+  doctorId: string
+  appointmentDate: string
+  appointmentTime: string
+  appointmentType: string
+  appointmentStatus: string
 }
 
 export type QueueStatus = 'waiting' | 'called' | 'in_progress' | 'completed' | 'cancelled'
@@ -201,25 +204,6 @@ export interface Room {
 
 export type RoomType = 'consultation' | 'examination' | 'procedure' | 'waiting' | 'office'
 
-// Media Types
-export interface Media {
-  id: string
-  filename: string
-  originalName: string
-  mimeType: string
-  size: number
-  url: string
-  thumbnailUrl?: string
-  uploadedBy: string
-  organizationId: string
-  metadata?: Record<string, any>
-  processingStatus: ProcessingStatus
-  createdAt: Date
-  updatedAt: Date
-}
-
-export type ProcessingStatus = 'pending' | 'processing' | 'completed' | 'failed'
-
 // Notification Types
 export interface Notification {
   id: string
@@ -236,7 +220,7 @@ export interface Notification {
   createdAt: Date
 }
 
-export type NotificationType = 
+export type NotificationType =
   | 'appointment_created'
   | 'appointment_reminder'
   | 'appointment_status_update'
@@ -246,7 +230,6 @@ export type NotificationType =
   | 'security_alert'
 
 export type NotificationChannel = 'fcm' | 'email' | 'websocket' | 'sms'
-
 export type NotificationPriority = 'low' | 'medium' | 'high' | 'urgent'
 
 // Form Types
@@ -262,14 +245,6 @@ export interface RegisterForm {
   confirmPassword: string
   role: UserRole
   organizationId?: string
-}
-
-export interface AppointmentForm {
-  doctorId: string
-  date: string
-  time: string
-  type: AppointmentType
-  notes?: string
 }
 
 // API Response Types
@@ -288,4 +263,24 @@ export interface PaginatedResponse<T> {
     total: number
     totalPages: number
   }
+}
+
+// Pharmacy Types (demo — maps to completed queue items)
+export interface PharmacyItem {
+  id: string
+  patientId: string
+  patientName: string
+  noRekamMedis?: string
+  doctorName: string
+  appointmentTime: string
+  prescriptions: Prescription[]
+  status: 'menunggu' | 'diproses' | 'selesai'
+  completedAt?: string
+}
+
+export interface Prescription {
+  name: string
+  dosage: string
+  qty: number
+  notes?: string
 }
