@@ -27,7 +27,7 @@ const schema = z.object({
   name: z.string().min(2, 'Nama minimal 2 karakter'),
   nik: z.string().length(16, 'NIK harus 16 digit').regex(/^\d+$/, 'NIK hanya angka'),
   dateOfBirth: z.string().min(1, 'Tanggal lahir wajib diisi'),
-  jenisKelamin: z.enum(['L', 'P'], { required_error: 'Wajib dipilih' }),
+  jenisKelamin: z.enum(['L', 'P'], { error: 'Wajib dipilih' }),
   golonganDarah: z.string().optional(),
   agama: z.string().optional(),
   statusPerkawinan: z.string().optional(),
