@@ -19,12 +19,21 @@ function LoginForm() {
   const searchParams = useSearchParams()
   const { login, isLoading, isAuthenticated } = useAuth()
 
+  // Patients always land on the mobile dashboard regardless of device.
+  const getDefaultRoute = () => {
+    try {
+      const raw = localStorage.getItem('auth_user')
+      if (raw && JSON.parse(raw).role === 'patient') return '/mobile/dashboard'
+    } catch {}
+    return '/dashboard'
+  }
+
   // Redirect authenticated users
   useEffect(() => {
     if (isAuthenticated) {
-      const returnUrl = searchParams.get('returnUrl') || 
-                       localStorage.getItem('auth_return_url') || 
-                       '/dashboard'
+      const returnUrl = searchParams.get('returnUrl') ||
+                       localStorage.getItem('auth_return_url') ||
+                       getDefaultRoute()
       localStorage.removeItem('auth_return_url')
       router.push(returnUrl)
     }
@@ -35,12 +44,12 @@ function LoginForm() {
     setError('')
 
     const result = await login(email, password)
-    
+
     if (result.success) {
       // Get return URL and redirect
-      const returnUrl = searchParams.get('returnUrl') || 
-                       localStorage.getItem('auth_return_url') || 
-                       '/dashboard'
+      const returnUrl = searchParams.get('returnUrl') ||
+                       localStorage.getItem('auth_return_url') ||
+                       getDefaultRoute()
       localStorage.removeItem('auth_return_url')
       router.push(returnUrl)
     } else {

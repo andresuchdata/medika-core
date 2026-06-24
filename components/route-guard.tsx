@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useDevice } from '@/lib/stores'
+import { useAuth } from '@/lib/auth/auth-context'
 import { useRouter, usePathname } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -13,6 +14,7 @@ interface RouteGuardProps {
 
 export function RouteGuard({ children }: RouteGuardProps) {
   const { getAppropriateRoute, deviceType } = useDevice()
+  const { user } = useAuth()
   const router = useRouter()
   const pathname = usePathname()
   const [isRedirecting, setIsRedirecting] = useState(false)
@@ -21,6 +23,11 @@ export function RouteGuard({ children }: RouteGuardProps) {
   useEffect(() => {
     // Skip API routes and static assets
     if (pathname.startsWith('/api') || pathname.includes('.')) {
+      return
+    }
+
+    // Patients always use the mobile layout regardless of device — skip device-based redirect
+    if (user?.role === 'patient' && pathname.startsWith('/mobile')) {
       return
     }
 
@@ -35,7 +42,7 @@ export function RouteGuard({ children }: RouteGuardProps) {
         router.push(targetRoute)
       }, 800)
     }
-  }, [getAppropriateRoute, pathname, router])
+  }, [getAppropriateRoute, pathname, router, user?.role])
 
   // Show redirect message
   if (isRedirecting && redirectPath) {
